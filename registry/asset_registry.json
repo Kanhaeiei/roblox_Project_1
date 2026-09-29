@@ -13,7 +13,68 @@
     "arise_violet": { "rgb": [135, 45, 255], "status": "approved" },
     "danger_crimson": { "rgb": [230, 40, 65], "status": "approved" }
   },
-  "prefabs": {},
+  "prefabs": {
+    "altar_upgrade": {
+      "modelName": "AltarUpgrade",
+      "status": "approved",
+      "category": "Gameplay",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "box",
+      "sockets": ["interaction_socket", "light_socket"],
+      "allowedMarkerHosts": ["marker_upgrade_altar"]
+    },
+    "altar_summon": {
+      "modelName": "AltarSummon",
+      "status": "approved",
+      "category": "Gameplay",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "box",
+      "sockets": ["interaction_socket", "vfx_socket"],
+      "allowedMarkerHosts": ["marker_summon_altar"]
+    },
+    "totem_miniboss": {
+      "modelName": "TotemMiniboss",
+      "status": "approved",
+      "category": "Structures",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "box",
+      "sockets": ["vfx_socket"],
+      "allowedMarkerHosts": ["marker_miniboss"]
+    },
+    "socket_boss_ritual": {
+      "modelName": "SocketBossRitual",
+      "status": "approved",
+      "category": "Gameplay",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "non_collidable",
+      "sockets": ["boss_ritual_socket"],
+      "allowedMarkerHosts": ["marker_boss"]
+    },
+    "portal_rebirth_gate": {
+      "modelName": "PortalRebirthGate",
+      "status": "approved",
+      "category": "LightingProps",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "box",
+      "sockets": ["portal_socket", "light_socket"],
+      "allowedMarkerHosts": ["marker_rebirth_gate"]
+    },
+    "beacon_spawn": {
+      "modelName": "BeaconSpawn",
+      "status": "approved",
+      "category": "Structures",
+      "primaryPartRequired": true,
+      "primaryPartName": "PrimaryPart",
+      "collisionPolicy": "box",
+      "sockets": ["spawn_light_socket"],
+      "allowedMarkerHosts": ["marker_player_spawn"]
+    }
+  },
   "audio": {
     "music_shadow_hub": { "status": "placeholder", "assetId": null },
     "music_boss_blood_knight": { "status": "placeholder", "assetId": null },

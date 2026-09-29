@@ -30,6 +30,13 @@ Registry.Folders = {
 	Gameplay = true,
 }
 
-Registry.Prefabs = {}
+Registry.Prefabs = {
+	altar_upgrade = "AltarUpgrade",
+	altar_summon = "AltarSummon",
+	totem_miniboss = "TotemMiniboss",
+	socket_boss_ritual = "SocketBossRitual",
+	portal_rebirth_gate = "PortalRebirthGate",
+	beacon_spawn = "BeaconSpawn",
+}
 
 return table.freeze(Registry)

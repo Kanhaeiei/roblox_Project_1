@@ -138,16 +138,36 @@ end
 local function createPrefab(operation: any, root: Folder, instancesById: { [string]: Instance }, buildId: string)
 	local payload = operation.payload
 	local registryName = Registry.Prefabs[payload.prefabKey]
-	assert(registryName, "Prefab key is not registered")
+	assert(registryName, "Prefab key is not registered: " .. tostring(payload.prefabKey))
 	local prefabFolder = ServerStorage:FindFirstChild("ShadowArmyPrefabs")
 	assert(prefabFolder, "ServerStorage.ShadowArmyPrefabs is missing")
 	local source = prefabFolder:FindFirstChild(registryName)
-	assert(source, "Registered prefab source is missing")
+	assert(source, "Registered prefab source is missing: " .. registryName)
+	assert(source:IsA("Model"), "Prefab source must be a Model: " .. registryName)
+	assert(source.PrimaryPart, "Prefab source must have a PrimaryPart assigned: " .. registryName)
+
 	local parent = root:FindFirstChild(payload.parentCategory)
-	assert(parent, "Prefab parent folder does not exist")
-	local instance = source:Clone()
+	assert(parent and parent:IsA("Folder"), "Prefab parent folder does not exist")
+
+	local instance = source:Clone() :: Model
 	instance.Name = string.match(operation.target, "([^.]+)$") or operation.operationId
+	instance:PivotTo(transform(payload.transform))
+
 	tagGenerated(instance, buildId, operation.operationId)
+	if payload.tags then
+		for _, tag in ipairs(payload.tags) do
+			CollectionService:AddTag(instance, "ShadowArmy_" .. tag)
+		end
+	end
+
+	if payload.canCollide ~= nil then
+		for _, desc in ipairs(instance:GetDescendants()) do
+			if desc:IsA("BasePart") then
+				desc.CanCollide = payload.canCollide
+			end
+		end
+	end
+
 	instance.Parent = parent
 	instancesById[instance.Name] = instance
 end

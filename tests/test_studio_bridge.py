@@ -69,6 +69,51 @@ class StudioBridgeDryRunTests(unittest.TestCase):
         report = self.bridge.run(manifest)
         self.assertIn("bridge.budget_exceeded", {issue.code for issue in report.issues})
 
+    def test_registered_prefab_passes_dry_run(self) -> None:
+        manifest = copy.deepcopy(self.manifest)
+        namespace = manifest["namespace"]
+        seq = len(manifest["operations"]) + 1
+        manifest["operations"].append({
+            "sequence": seq,
+            "operationId": "prefab_decor",
+            "action": "create_prefab",
+            "target": f"{namespace}.Gameplay.prefab_decor",
+            "payload": {
+                "prefabKey": "altar_upgrade",
+                "parentCategory": "Gameplay",
+                "transform": {"position": [0, 0, 0], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            },
+        })
+        manifest["budgets"]["planned"]["instances"] += 1
+        report = self.bridge.run(manifest)
+        self.assertTrue(report.ok, report.to_dict())
+
+    def test_unknown_prefab_fails_dry_run(self) -> None:
+        manifest = copy.deepcopy(self.manifest)
+        namespace = manifest["namespace"]
+        seq = len(manifest["operations"]) + 1
+        manifest["operations"].append({
+            "sequence": seq,
+            "operationId": "prefab_bad",
+            "action": "create_prefab",
+            "target": f"{namespace}.Gameplay.prefab_bad",
+            "payload": {
+                "prefabKey": "unregistered_prefab_xyz",
+                "parentCategory": "Gameplay",
+                "transform": {"position": [0, 0, 0], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            },
+        })
+        manifest["budgets"]["planned"]["instances"] += 1
+        report = self.bridge.run(manifest)
+        self.assertFalse(report.ok)
+        self.assertIn("bridge.unknown_prefab_token", {issue.code for issue in report.issues})
+
 
 if __name__ == "__main__":
     unittest.main()

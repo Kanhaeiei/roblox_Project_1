@@ -268,6 +268,105 @@ class ArtifactValidatorTests(unittest.TestCase):
             codes = {issue.code for issue in report.issues}
             self.assertIn("terrain.subtract_violates_protected_area", codes)
 
+    def test_valid_prefab_instance_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary)
+            for source in VALID.glob("*.json"):
+                target.joinpath(source.name).write_bytes(source.read_bytes())
+
+            props_path = target / "04_props.json"
+            props = json.loads(props_path.read_text(encoding="utf-8"))
+            props["payload"]["instances"].append({
+                "kind": "prefab",
+                "id": "decor_altar",
+                "prefabKey": "altar_upgrade",
+                "parentCategory": "Gameplay",
+                "transform": {"position": [0, 0, -96], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            })
+            props_path.write_text(json.dumps(props), encoding="utf-8")
+
+            report = self.validator.validate_directory(target)
+            self.assertTrue(report.ok, report.to_dict())
+
+    def test_unknown_prefab_key_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary)
+            for source in VALID.glob("*.json"):
+                target.joinpath(source.name).write_bytes(source.read_bytes())
+
+            props_path = target / "04_props.json"
+            props = json.loads(props_path.read_text(encoding="utf-8"))
+            props["payload"]["instances"].append({
+                "kind": "prefab",
+                "id": "bad_prefab",
+                "prefabKey": "non_existent_key",
+                "parentCategory": "Gameplay",
+                "transform": {"position": [0, 0, -96], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            })
+            props_path.write_text(json.dumps(props), encoding="utf-8")
+
+            report = self.validator.validate_directory(target)
+            self.assertFalse(report.ok)
+            codes = {issue.code for issue in report.issues}
+            self.assertIn("ref.unknown_prefab_key", codes)
+
+    def test_prefab_category_mismatch_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary)
+            for source in VALID.glob("*.json"):
+                target.joinpath(source.name).write_bytes(source.read_bytes())
+
+            props_path = target / "04_props.json"
+            props = json.loads(props_path.read_text(encoding="utf-8"))
+            # altar_upgrade is declared for category "Gameplay", putting it in "LightingProps" must fail
+            props["payload"]["instances"].append({
+                "kind": "prefab",
+                "id": "misplaced_altar",
+                "prefabKey": "altar_upgrade",
+                "parentCategory": "LightingProps",
+                "transform": {"position": [0, 0, -96], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            })
+            props_path.write_text(json.dumps(props), encoding="utf-8")
+
+            report = self.validator.validate_directory(target)
+            self.assertFalse(report.ok)
+            codes = {issue.code for issue in report.issues}
+            self.assertIn("ref.prefab_category_mismatch", codes)
+
+    def test_floating_prefab_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary)
+            for source in VALID.glob("*.json"):
+                target.joinpath(source.name).write_bytes(source.read_bytes())
+
+            props_path = target / "04_props.json"
+            props = json.loads(props_path.read_text(encoding="utf-8"))
+            props["payload"]["instances"].append({
+                "kind": "prefab",
+                "id": "floating_altar",
+                "prefabKey": "altar_upgrade",
+                "parentCategory": "Gameplay",
+                "transform": {"position": [0, 50, 0], "orientationDegrees": [0, 0, 0]},
+                "variant": "default",
+                "lodPolicy": "automatic",
+                "tags": ["interaction"],
+            })
+            props_path.write_text(json.dumps(props), encoding="utf-8")
+
+            report = self.validator.validate_directory(target)
+            self.assertFalse(report.ok)
+            codes = {issue.code for issue in report.issues}
+            self.assertIn("spatial.unsupported_structure", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

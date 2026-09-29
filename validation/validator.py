@@ -156,6 +156,8 @@ class ArtifactValidator:
             self._validate_terrain(payload, name, report)
         elif artifact_type == "economy":
             self._validate_economy(payload, name, report)
+        elif artifact_type == "props":
+            self._validate_props(payload, name, report)
         elif artifact_type == "qa":
             approved = payload.get("status") == "APPROVED"
             ready = payload.get("readyForStudioBridge") is True
@@ -344,6 +346,33 @@ class ArtifactValidator:
         elif isinstance(value, list):
             for index, item in enumerate(value):
                 self._check_safe_integers(item, name, report, f"{path}/{index}")
+
+    def _validate_props(self, payload: Mapping[str, Any], name: str, report: ValidationReport) -> None:
+        asset_reg = _load_asset_registry()
+        prefabs_reg = asset_reg.get("prefabs", {})
+        for index, instance in enumerate(payload.get("instances", [])):
+            if not isinstance(instance, Mapping):
+                continue
+            if instance.get("kind") == "prefab":
+                prefab_key = instance.get("prefabKey")
+                if prefabs_reg and prefab_key not in prefabs_reg:
+                    report.add(
+                        "ref.unknown_prefab_key",
+                        f"/payload/instances/{index}/prefabKey",
+                        f"Unknown prefab key {prefab_key!r}",
+                        artifact=name,
+                    )
+                elif prefabs_reg and prefab_key in prefabs_reg:
+                    reg_entry = prefabs_reg[prefab_key]
+                    expected_cat = reg_entry.get("category")
+                    actual_cat = instance.get("parentCategory")
+                    if expected_cat and actual_cat != expected_cat:
+                        report.add(
+                            "ref.prefab_category_mismatch",
+                            f"/payload/instances/{index}/parentCategory",
+                            f"Prefab {prefab_key!r} requires category {expected_cat!r}, got {actual_cat!r}",
+                            artifact=name,
+                        )
 
     def _validate_cross_artifact(self, artifacts: Mapping[str, Mapping[str, Any]], names: Mapping[str, str], report: ValidationReport) -> None:
         build_ids = {artifact.get("buildId") for artifact in artifacts.values()}
@@ -550,6 +579,29 @@ class ArtifactValidator:
 
             bounds = _primitive_aabb(instance)
             if not bounds:
+                transform = instance.get("transform")
+                pos = transform.get("position") if isinstance(transform, Mapping) else None
+                if instance.get("kind") == "prefab" and _vec3(pos):
+                    px, py, pz = pos
+                    supported = False
+                    for f_id, f_bounds in foundation_boxes:
+                        if f_bounds["min"][0] <= px <= f_bounds["max"][0] and f_bounds["min"][2] <= pz <= f_bounds["max"][2]:
+                            if abs(py - f_bounds["max"][1]) <= 0.5:
+                                supported = True
+                                break
+                    if not supported and terrain_fill_boxes:
+                        for t_id, t_bounds in terrain_fill_boxes:
+                            if t_bounds["min"][0] <= px <= t_bounds["max"][0] and t_bounds["min"][2] <= pz <= t_bounds["max"][2]:
+                                if t_bounds["min"][1] - 0.25 <= py <= t_bounds["max"][1] + 0.5:
+                                    supported = True
+                                    break
+                    if not supported:
+                        report.add(
+                            "spatial.unsupported_structure",
+                            f"/payload/instances/{index}",
+                            f"Structure prefab {instance.get('id')!r} is floating without foundation or terrain support",
+                            artifact=name,
+                        )
                 continue
 
             bottom_y = bounds["min"][1]
@@ -589,6 +641,16 @@ class ArtifactValidator:
                     f"Structure instance {instance.get('id')!r} is floating without foundation or terrain support",
                     artifact=name,
                 )
+
+
+def _load_asset_registry() -> dict[str, Any]:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "asset_registry.json"
+    if registry_path.exists():
+        try:
+            return json.loads(registry_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+    return {}
 
 
 def _payload(artifacts: Mapping[str, Mapping[str, Any]], artifact_type: str) -> Mapping[str, Any] | None:
