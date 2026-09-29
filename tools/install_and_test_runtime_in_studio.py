@@ -16,12 +16,14 @@ FILES = [
     ("ServerScriptService/Services/ShadowArmyService", RUNTIME / "ServerScriptService" / "Services" / "ShadowArmyService.lua"),
     ("ServerScriptService/Services/RemoteService", RUNTIME / "ServerScriptService" / "Services" / "RemoteService.lua"),
     ("ServerScriptService/RuntimeBootstrap", RUNTIME / "ServerScriptService" / "RuntimeBootstrap.server.lua"),
+    ("StarterPlayer/StarterPlayerScripts/RuntimeClient", RUNTIME / "StarterPlayerScripts" / "RuntimeClient.client.lua"),
 ]
 
 def generate_install_luau() -> str:
     lines = [
         "local ReplicatedStorage = game:GetService('ReplicatedStorage')",
         "local ServerScriptService = game:GetService('ServerScriptService')",
+        "local StarterPlayer = game:GetService('StarterPlayer')",
         "",
         "local function ensureFolder(parent, name)",
         "    local folder = parent:FindFirstChild(name)",
@@ -35,15 +37,24 @@ def generate_install_luau() -> str:
         "",
         "local repShared = ensureFolder(ReplicatedStorage, 'Shared')",
         "local sssServices = ensureFolder(ServerScriptService, 'Services')",
+        "local sps = StarterPlayer:WaitForChild('StarterPlayerScripts')",
         "",
     ]
 
     for rel_path, path in FILES:
         content = path.read_text(encoding="utf-8")
-        is_script = rel_path.endswith("RuntimeBootstrap")
-        class_name = "Script" if is_script else "ModuleScript"
-        parent_var = "repShared" if "ReplicatedStorage/Shared" in rel_path else ("sssServices" if "ServerScriptService/Services" in rel_path else "ServerScriptService")
-        mod_name = path.stem.replace(".server", "")
+        is_client = rel_path.endswith("RuntimeClient")
+        is_server_script = rel_path.endswith("RuntimeBootstrap")
+        class_name = "LocalScript" if is_client else ("Script" if is_server_script else "ModuleScript")
+        if "StarterPlayer" in rel_path:
+            parent_var = "sps"
+        elif "ReplicatedStorage/Shared" in rel_path:
+            parent_var = "repShared"
+        elif "ServerScriptService/Services" in rel_path:
+            parent_var = "sssServices"
+        else:
+            parent_var = "ServerScriptService"
+        mod_name = path.stem.replace(".server", "").replace(".client", "")
         escaped_source = json.dumps(content)
 
         lines.extend([

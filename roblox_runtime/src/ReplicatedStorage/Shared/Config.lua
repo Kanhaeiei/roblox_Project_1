@@ -49,6 +49,69 @@ function Config.rebirthPowerMultiplier(rebirthCount: number): number
 	return 1 + (0.50 * r) + (0.05 * (r ^ 2))
 end
 
+-- Server-authoritative upgrades allowlist
+Config.Upgrades = {
+	attack_power = {
+		name = "Attack Power",
+		maxLevel = 50,
+		costFormula = function(level: number): number
+			return math.floor(100 * (1.5 ^ level))
+		end,
+		bonusFormula = function(level: number): number
+			return level * 15
+		end,
+	},
+	mana_efficiency = {
+		name = "Mana Efficiency",
+		maxLevel = 25,
+		costFormula = function(level: number): number
+			return math.floor(250 * (1.8 ^ level))
+		end,
+		bonusFormula = function(level: number): number
+			return level * 0.05
+		end,
+	},
+}
+
+-- Combat tuning & bounds
+Config.Combat = {
+	maxAttackRange = 50, -- studs
+	attackCooldown = 0.125, -- seconds (8 attacks/sec)
+	ritualSocketMaxDistance = 30, -- studs
+	defaultAltarPosition = Vector3.new(0, 5, 75),
+}
+
+-- World 1 enemy archetypes (per-player progression)
+Config.Enemies = {
+	forest_goblin = {
+		id = "forest_goblin",
+		name = "Forest Goblin",
+		maxHealth = 100,
+		rewardMana = 25,
+		isBoss = false,
+		isMiniBoss = false,
+		spawnPosition = Vector3.new(0, 5, 20),
+	},
+	wolf_alpha_miniboss = {
+		id = "wolf_alpha_miniboss",
+		name = "Alpha Shadow Wolf",
+		maxHealth = 1000,
+		rewardMana = 500,
+		isBoss = false,
+		isMiniBoss = true,
+		spawnPosition = Vector3.new(0, 5, 50),
+	},
+	shadow_monarch_boss = {
+		id = "shadow_monarch_boss",
+		name = "Shadow Monarch",
+		maxHealth = 5000,
+		rewardMana = 2500,
+		isBoss = true,
+		isMiniBoss = false,
+		spawnPosition = Vector3.new(0, 5, 75),
+	},
+}
+
 Config.GachaPools = {
 	pool_shadow_forest = {
 		id = "pool_shadow_forest",
@@ -114,5 +177,9 @@ Config.AnalyticsEvents = {
 	ftue_first_arise = true,
 	ftue_first_rebirth = true,
 }
+
+-- Developer Products boundary: Disabled until live production product IDs are registered
+Config.DeveloperProductsEnabled = false
+Config.DeveloperProducts = {} :: { [number]: { name: string, currency: string, amount: number } }
 
 return Config

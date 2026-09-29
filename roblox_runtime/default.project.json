@@ -12,6 +12,16 @@
       "$className": "ServerScriptService",
       "Services": {
         "$path": "src/ServerScriptService/Services"
+      },
+      "RuntimeBootstrap": {
+        "$path": "src/ServerScriptService/RuntimeBootstrap.server.lua"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayerScripts"
       }
     }
   }

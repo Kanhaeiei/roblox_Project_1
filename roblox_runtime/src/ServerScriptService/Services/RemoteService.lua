@@ -13,6 +13,7 @@ local CombatService = require(script.Parent.CombatService)
 local ShadowArmyService = require(script.Parent.ShadowArmyService)
 
 local RemoteService = {}
+RemoteService.handlers = {} :: { [string]: (player: Player, ...any) -> any }
 
 -- Rate limiters per remote endpoint
 local limiters = {
@@ -50,6 +51,7 @@ function RemoteService.init()
 		end
 		return { success = true, data = result }
 	end
+	RemoteService.handlers.request_target = rfTarget.OnServerInvoke
 
 	rfUpgrade.OnServerInvoke = function(player: Player, upgradeType: any)
 		local allowed, limitErr = limiters.request_upgrade.consume(player)
@@ -61,13 +63,23 @@ function RemoteService.init()
 			return { success = false, error = "Invalid upgradeType argument" }
 		end
 
+		-- Validate against server-authoritative upgrades allowlist
+		local upgradeDef = Config.Upgrades[upgradeType]
+		if not upgradeDef then
+			return { success = false, error = "Unknown or unapproved upgrade key: " .. tostring(upgradeType) }
+		end
+
 		local profile = PlayerDataService.getProfile(player)
 		if not profile then
 			return { success = false, error = "No active session" }
 		end
 
 		local currentLevel = profile.Progression.WorldUpgrades[upgradeType] or 0
-		local cost = math.floor(100 * (1.5 ^ currentLevel))
+		if currentLevel >= upgradeDef.maxLevel then
+			return { success = false, error = string.format("Upgrade '%s' has reached maximum level (%d)", upgradeType, upgradeDef.maxLevel) }
+		end
+
+		local cost = upgradeDef.costFormula(currentLevel)
 		local currentMana = profile.Currencies.Mana or 0
 
 		if currentMana < cost then
@@ -80,6 +92,8 @@ function RemoteService.init()
 		end
 
 		profile.Progression.WorldUpgrades[upgradeType] = currentLevel + 1
+		PlayerDataService.markDirty(player)
+
 		return {
 			success = true,
 			data = {
@@ -89,6 +103,7 @@ function RemoteService.init()
 			},
 		}
 	end
+	RemoteService.handlers.request_upgrade = rfUpgrade.OnServerInvoke
 
 	rfArise.OnServerInvoke = function(player: Player)
 		local allowed, limitErr = limiters.request_arise.consume(player)
@@ -102,6 +117,7 @@ function RemoteService.init()
 		end
 		return { success = true, data = shadow }
 	end
+	RemoteService.handlers.request_arise = rfArise.OnServerInvoke
 
 	rfSummon.OnServerInvoke = function(player: Player)
 		local allowed, limitErr = limiters.request_summon.consume(player)
@@ -115,6 +131,7 @@ function RemoteService.init()
 		end
 		return { success = true, data = result }
 	end
+	RemoteService.handlers.request_summon = rfSummon.OnServerInvoke
 
 	rfRebirth.OnServerInvoke = function(player: Player)
 		local allowed, limitErr = limiters.request_rebirth.consume(player)
@@ -128,6 +145,7 @@ function RemoteService.init()
 		end
 		return { success = true, data = result }
 	end
+	RemoteService.handlers.request_rebirth = rfRebirth.OnServerInvoke
 
 	-- Connect lifecycle
 	Players.PlayerAdded:Connect(function(player)
@@ -144,10 +162,14 @@ function RemoteService.init()
 	end)
 
 	game:BindToClose(function()
+		PlayerDataService.stopAutosaveLoop()
 		for _, player in ipairs(Players:GetPlayers()) do
 			PlayerDataService.closeSession(player)
 		end
 	end)
+
+	-- Start background autosave loop
+	PlayerDataService.startAutosaveLoop()
 end
 
 return RemoteService

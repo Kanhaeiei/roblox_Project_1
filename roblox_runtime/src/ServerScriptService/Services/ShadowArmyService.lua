@@ -2,6 +2,7 @@
 -- ShadowArmyService: Squad management, gacha summon with pity, guaranteed boss ARISE, and rebirth reset execution
 -- Enforces server-authoritative inventory, pity invariants, and reset manifest boundaries
 
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -12,9 +13,6 @@ local ShadowArmyService = {}
 
 -- Link CombatService back to ShadowArmyService for squad power calculation
 CombatService.setShadowArmyService(ShadowArmyService)
-
-local BOSS_ALTAR_POSITION = Vector3.new(0, 0, 75) -- Match socket_boss_ritual position
-local MAX_RITUAL_DISTANCE = 30 -- studs
 
 export type ShadowEntity = {
 	id: string,
@@ -31,13 +29,41 @@ local SHADOW_DEFINITIONS: { [string]: ShadowEntity } = {
 	shadow_boss_monarch = { id = "shadow_boss_monarch", name = "Shadow Monarch", power = 1500, rarity = "boss" },
 }
 
-function ShadowArmyService.getMaxSquadSlots(player: Player): number
+local mockCharacters: { [any]: { position: Vector3, isAlive: boolean } } = {}
+
+function ShadowArmyService.setMockCharacter(player: any, position: Vector3?, isAlive: boolean?)
+	if position == nil and isAlive == nil then
+		mockCharacters[player] = nil
+	else
+		mockCharacters[player] = {
+			position = position or Vector3.zero,
+			isAlive = if isAlive ~= nil then isAlive else true,
+		}
+	end
+end
+
+-- Resolve altar position dynamically from world markers
+local function resolveAltarPosition(): Vector3
+	local tagged = CollectionService:GetTagged("ShadowArmyGameplayMarker")
+	for _, inst in ipairs(tagged) do
+		if inst:GetAttribute("GameplayMarkerId") == "socket_boss_ritual" then
+			if inst:IsA("Model") and inst.PrimaryPart then
+				return inst.PrimaryPart.Position
+			elseif inst:IsA("BasePart") then
+				return inst.Position
+			end
+		end
+	end
+	return Config.Combat.defaultAltarPosition
+end
+
+function ShadowArmyService.getMaxSquadSlots(player: any): number
 	local profile = PlayerDataService.getProfile(player)
 	local rebirthCount = profile and profile.Progression.RebirthCount or 0
 	return Config.Rebirth.baseSquadSlots + (Config.Rebirth.earnedSlotsPerMilestone * rebirthCount)
 end
 
-function ShadowArmyService.getTotalSquadPower(player: Player): number
+function ShadowArmyService.getTotalSquadPower(player: any): number
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then return 0 end
 
@@ -52,7 +78,7 @@ function ShadowArmyService.getTotalSquadPower(player: Player): number
 	return totalPower
 end
 
-function ShadowArmyService.ownsShadow(player: Player, shadowId: string): boolean
+function ShadowArmyService.ownsShadow(player: any, shadowId: string): boolean
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then return false end
 	for _, shadow in ipairs(profile.Inventory.Shadows) do
@@ -64,50 +90,68 @@ function ShadowArmyService.ownsShadow(player: Player, shadowId: string): boolean
 end
 
 -- Guaranteed first ARISE on boss clear
-function ShadowArmyService.handleAriseRequest(player: Player, playerPosition: Vector3?): (boolean, string?, ShadowEntity?)
+function ShadowArmyService.handleAriseRequest(player: any): (boolean, string?, ShadowEntity?)
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then
 		return false, "No active session", nil
 	end
 
-	-- Distance validation to ritual socket / boss arena
-	local charPos = playerPosition
-	if not charPos then
+	-- 1. Server-authoritative character life and position check
+	local charPos: Vector3? = nil
+	local mock = mockCharacters[player]
+
+	if mock then
+		if not mock.isAlive then
+			return false, "Player is not alive", nil
+		end
+		charPos = mock.position
+	else
 		local character = player.Character
-		if character and character.PrimaryPart then
-			charPos = character.PrimaryPart.Position
+		if not character then
+			return false, "Player character not found on server", nil
 		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local hrp = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if not humanoid or humanoid.Health <= 0 or not hrp then
+			return false, "Player is not alive", nil
+		end
+		charPos = hrp.Position
 	end
 
-	if charPos then
-		local dist = (charPos - BOSS_ALTAR_POSITION).Magnitude
-		if dist > MAX_RITUAL_DISTANCE then
-			return false, string.format("Too far from ritual socket (%.1f > %.1f studs)", dist, MAX_RITUAL_DISTANCE), nil
-		end
+	if not charPos then
+		return false, "Player character position unavailable", nil
 	end
 
-	-- Verify boss clear state
+	-- 2. Distance validation to ritual socket / boss arena
+	local altarPos = resolveAltarPosition()
+	local dist = (charPos - altarPos).Magnitude
+	if dist > Config.Combat.ritualSocketMaxDistance then
+		return false, string.format("Too far from ritual socket (%.1f > %.1f studs)", dist, Config.Combat.ritualSocketMaxDistance), nil
+	end
+
+	-- 3. Verify boss clear state
 	if not CombatService.hasClearedBoss(player) then
 		return false, "Boss has not been cleared", nil
 	end
 
-	-- Verify not already owned
+	-- 4. Verify not already owned
 	if ShadowArmyService.ownsShadow(player, "shadow_boss_monarch") then
 		return false, "Shadow Monarch is already extracted and owned", nil
 	end
 
-	-- Consume boss clear
+	-- 5. Consume boss clear
 	CombatService.consumeBossClear(player)
 
-	-- Guaranteed extraction
+	-- 6. Guaranteed extraction
 	local bossShadow = table.clone(SHADOW_DEFINITIONS["shadow_boss_monarch"])
 	table.insert(profile.Inventory.Shadows, bossShadow)
+	PlayerDataService.markDirty(player)
 
 	return true, nil, bossShadow
 end
 
 -- Gacha summon with 10,000 basis point rate table and 50-roll pity counter
-function ShadowArmyService.handleSummonRequest(player: Player, forcedRoll: number?): (boolean, string?, { shadow: ShadowEntity, isDuplicate: boolean, isPity: boolean }?)
+function ShadowArmyService.handleSummonRequest(player: any, forcedRoll: number?): (boolean, string?, { shadow: ShadowEntity, isDuplicate: boolean, isPity: boolean }?)
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then
 		return false, "No active session", nil
@@ -166,6 +210,8 @@ function ShadowArmyService.handleSummonRequest(player: Player, forcedRoll: numbe
 		table.insert(profile.Inventory.Shadows, table.clone(def))
 	end
 
+	PlayerDataService.markDirty(player)
+
 	return true, nil, {
 		shadow = def,
 		isDuplicate = isDuplicate,
@@ -174,7 +220,7 @@ function ShadowArmyService.handleSummonRequest(player: Player, forcedRoll: numbe
 end
 
 -- Rebirth execution according to ResetManifest
-function ShadowArmyService.handleRebirthRequest(player: Player): (boolean, string?, { newRebirthCount: number, sigilsAwarded: number }?)
+function ShadowArmyService.handleRebirthRequest(player: any): (boolean, string?, { newRebirthCount: number, sigilsAwarded: number }?)
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then
 		return false, "No active session", nil
@@ -203,6 +249,7 @@ function ShadowArmyService.handleRebirthRequest(player: Player): (boolean, strin
 	profile.Progression.RebirthCount = currentRebirth + 1
 	local sigilsReward = 1 + math.floor(currentRebirth * 0.5)
 	PlayerDataService.addCurrency(player, "RebirthSigils", sigilsReward)
+	PlayerDataService.markDirty(player)
 
 	return true, nil, {
 		newRebirthCount = profile.Progression.RebirthCount,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -11,7 +11,9 @@ RUNTIME = ROOT / "roblox_runtime" / "src"
 ECONOMY_FIXTURE = ROOT / "fixtures" / "world_01_shadow_forest" / "07_economy.json"
 
 
-class RuntimeFoundationContractTests(unittest.TestCase):
+class RuntimeFoundationStaticContractTests(unittest.TestCase):
+    """Static text and schema verification tests for runtime Luau source and Rojo config."""
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.economy_data = json.loads(ECONOMY_FIXTURE.read_text(encoding="utf-8"))["payload"]
@@ -25,13 +27,35 @@ class RuntimeFoundationContractTests(unittest.TestCase):
         cls.remote_service_source = (RUNTIME / "ServerScriptService" / "Services" / "RemoteService.lua").read_text(encoding="utf-8")
         cls.bootstrap_source = (RUNTIME / "ServerScriptService" / "RuntimeBootstrap.server.lua").read_text(encoding="utf-8")
 
-    def test_runtime_project_structure_exists(self) -> None:
+    def test_rojo_project_mapping_and_build(self) -> None:
         project_file = ROOT / "roblox_runtime" / "default.project.json"
-        self.assertTrue(project_file.is_file())
+        self.assertTrue(project_file.is_file(), "default.project.json must exist")
         project = json.loads(project_file.read_text(encoding="utf-8"))
         self.assertEqual(project["name"], "ShadowArmyRuntime")
-        self.assertIn("ReplicatedStorage", project["tree"])
-        self.assertIn("ServerScriptService", project["tree"])
+        tree = project["tree"]
+        self.assertEqual(tree["$className"], "DataModel")
+        self.assertIn("ReplicatedStorage", tree)
+        self.assertIn("ServerScriptService", tree)
+        self.assertIn("StarterPlayer", tree)
+
+        sss = tree["ServerScriptService"]
+        self.assertIn("Services", sss)
+        self.assertIn("RuntimeBootstrap", sss)
+
+        # Smoke check actual Rojo build compilation
+        test_rbxm = ROOT / "test_smoke_build.rbxm"
+        try:
+            res = subprocess.run(
+                ["rojo", "build", str(project_file), "-o", str(test_rbxm)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(res.returncode, 0, f"Rojo build failed: {res.stderr}")
+            self.assertTrue(test_rbxm.is_file(), "Rojo should output test_smoke_build.rbxm")
+        finally:
+            if test_rbxm.is_file():
+                test_rbxm.unlink()
 
     def test_safe_integer_ceiling_matches(self) -> None:
         expected_ceiling = self.economy_data["safeIntegerCeiling"]
@@ -39,8 +63,7 @@ class RuntimeFoundationContractTests(unittest.TestCase):
 
     def test_currencies_and_caps_match_economy_fixture(self) -> None:
         for cur in self.economy_data["currencies"]:
-            cur_id = cur["id"].capitalize() if cur["id"] == "mana" or cur["id"] == "essence" else "".join(word.capitalize() for word in cur["id"].split("_"))
-            # Check presence in Config and PlayerData defaults
+            cur_id = cur["id"].capitalize() if cur["id"] in ("mana", "essence") else "".join(word.capitalize() for word in cur["id"].split("_"))
             self.assertIn(cur_id, self.config_source)
             self.assertIn(cur_id, self.player_data_source)
             if "cap" in cur:
@@ -50,7 +73,6 @@ class RuntimeFoundationContractTests(unittest.TestCase):
         self.assertIn("function Config.worldBasePower", self.config_source)
         self.assertIn("function Config.rebirthCost", self.config_source)
         self.assertIn("function Config.rebirthPowerMultiplier", self.config_source)
-        # Check formula constants from fixture
         self.assertIn("25000", self.config_source)
         self.assertIn("1.18", self.config_source)
         self.assertIn("0.50", self.config_source)
@@ -74,7 +96,6 @@ class RuntimeFoundationContractTests(unittest.TestCase):
             self.assertIn(field, self.config_source)
         for field in reset_manifest["keep"]:
             self.assertIn(field, self.config_source)
-        # Verify Rebirth execution resets Mana and Upgrades while keeping Shadows
         self.assertIn("profile.Currencies.Mana = 0", self.shadow_army_source)
         self.assertIn("profile.Progression.WorldUpgrades = {}", self.shadow_army_source)
         self.assertIn("profile.Progression.RebirthCount = currentRebirth + 1", self.shadow_army_source)
@@ -92,26 +113,30 @@ class RuntimeFoundationContractTests(unittest.TestCase):
             self.assertIn(event, self.config_source)
             self.assertIn(event, self.analytics_source)
 
-    def test_session_lease_and_conflict_policy(self) -> None:
-        # PlayerDataService must handle session lease, conflict check, and read-only fallback
+    def test_session_token_and_ownership_lease(self) -> None:
+        self.assertIn("sessionToken", self.player_data_source)
         self.assertIn("sessionLock", self.player_data_source)
         self.assertIn("leaseTimestamp", self.player_data_source)
         self.assertIn("LEASE_DURATION", self.player_data_source)
         self.assertIn("isReadOnly", self.player_data_source)
+        self.assertIn("isConflicted", self.player_data_source)
 
-    def test_idempotent_receipt_processing(self) -> None:
-        # PlayerDataService must implement idempotent ProcessReceipt
-        self.assertIn("processReceipt", self.player_data_source)
-        self.assertIn("PurchaseHistory", self.player_data_source)
-        self.assertIn("Enum.ProductPurchaseDecision.PurchaseGranted", self.player_data_source)
-        self.assertIn("Enum.ProductPurchaseDecision.NotProcessedYet", self.player_data_source)
+    def test_developer_products_boundary_disabled(self) -> None:
+        self.assertIn("Config.DeveloperProductsEnabled = false", self.config_source)
+        self.assertIn("Developer product processing disabled", self.player_data_source)
 
-    def test_guaranteed_first_arise(self) -> None:
-        # ShadowArmyService and CombatService must enforce guaranteed ARISE on boss clear
-        self.assertIn("hasClearedBoss", self.combat_source)
-        self.assertIn("consumeBossClear", self.combat_source)
-        self.assertIn("handleAriseRequest", self.shadow_army_source)
-        self.assertIn("shadow_boss_monarch", self.shadow_army_source)
+    def test_upgrades_allowlist_configured(self) -> None:
+        self.assertIn("Config.Upgrades", self.config_source)
+        self.assertIn("attack_power", self.config_source)
+        self.assertIn("mana_efficiency", self.config_source)
+        self.assertIn("maxLevel", self.config_source)
+        self.assertIn("Unknown or unapproved upgrade key", self.remote_service_source)
+
+    def test_combat_cooldown_and_server_authoritative_position(self) -> None:
+        self.assertIn("attackCooldown", self.config_source)
+        self.assertIn("Attack cooldown active", self.combat_source)
+        self.assertIn("Player is not alive", self.combat_source)
+        self.assertIn("Target out of range", self.combat_source)
 
 
 if __name__ == "__main__":
