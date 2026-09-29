@@ -9,11 +9,15 @@ description = "Contract and deterministic validators for Shadow Army Rebirth bui
 requires-python = ">=3.11"
 dependencies = ["jsonschema>=4.20,<5"]
 
+[project.optional-dependencies]
+ai = ["openai>=1.66,<3"]
+
 [project.scripts]
 shadow-validate = "validation.cli:main"
 shadow-assemble = "manifest.cli:main"
 shadow-bridge-dry-run = "studio_bridge.cli:main"
 shadow-orchestrate = "orchestrator.cli:main"
+shadow-agent-run = "agent_runner.cli:main"
 
 [tool.setuptools]
-packages = ["validation", "manifest", "studio_bridge", "orchestrator"]
+packages = ["validation", "manifest", "studio_bridge", "orchestrator", "agent_runner"]

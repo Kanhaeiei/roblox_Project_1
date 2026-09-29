@@ -40,6 +40,9 @@ class ImmutableArtifactStore:
     def put_manifest(self, manifest: Mapping[str, Any]) -> str:
         return self._put("manifests", manifest)
 
+    def put_candidate(self, artifact: Mapping[str, Any]) -> str:
+        return self._put("candidates", artifact)
+
     def put_build_record(self, record: Mapping[str, Any]) -> str:
         build_id = record.get("buildId")
         if not isinstance(build_id, str):
@@ -51,7 +54,7 @@ class ImmutableArtifactStore:
 
     def get(self, kind: str, digest: str) -> dict[str, Any]:
         suffix = self._digest_suffix(digest)
-        if kind not in {"artifacts", "manifests"}:
+        if kind not in {"artifacts", "manifests", "candidates"}:
             raise StoreIntegrityError(f"Unsupported object kind {kind!r}")
         path = self.root / "objects" / kind / "sha256" / f"{suffix}.json"
         data = path.read_bytes()
@@ -59,6 +62,15 @@ class ImmutableArtifactStore:
         if content_hash(value) != digest:
             raise StoreIntegrityError(f"Stored object failed hash verification: {path}")
         return value
+
+    def put_run_record(self, record: Mapping[str, Any]) -> str:
+        build_id = record.get("buildId")
+        if not isinstance(build_id, str):
+            raise StoreIntegrityError("Run record requires a string buildId")
+        digest = content_hash(record)
+        suffix = self._digest_suffix(digest)
+        self._write_once(self.root / "runs" / build_id / f"{suffix}.json", canonical_json_bytes(record))
+        return digest
 
     def _put(self, kind: str, value: Mapping[str, Any]) -> str:
         digest = content_hash(value)

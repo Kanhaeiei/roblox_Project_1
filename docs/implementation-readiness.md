@@ -10,6 +10,7 @@ This document turns the specification into release gates. A checked item require
 - [x] Add stable-ID uniqueness and cross-artifact reference validation.
 - [x] Hash canonicalized inputs/outputs, verify dependency lineage, and reproduce the Golden build from its seed.
 - [x] Reject NaN, Infinity, unknown production fields, and incompatible major versions.
+- [x] Bound model repair to three attempts and preserve candidate/run provenance.
 
 ## Deterministic validators
 

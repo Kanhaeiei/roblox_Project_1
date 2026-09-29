@@ -2,7 +2,7 @@
 
 Version 2.0 is the source of truth for an anime minion battler built for Roblox. The repository defines the player experience, economy, generated-world contracts, validation gates, and the boundary between the build pipeline and the live game.
 
-This repository is a specification and build-contract package. It includes deterministic artifact validation, seeded pipeline orchestration, immutable content-addressed storage, manifest assembly, and a non-mutating Studio Bridge dry run. It does **not** yet invoke live AI models, contain a runnable game, provide a mutating Studio plugin, or include production assets.
+This repository is a specification and build-contract package. It includes a bounded Agent Runner with replay and optional OpenAI Responses providers, deterministic artifact validation, seeded pipeline orchestration, immutable content-addressed storage, manifest assembly, and a non-mutating Studio Bridge dry run. It does **not** yet contain a runnable game, provide a mutating Studio plugin, or include production assets.
 
 ## Product promise
 
@@ -65,6 +65,7 @@ roblox-map-builder/
 │   ├── pipeline.schema.json
 │   └── build-manifest.schema.json
 ├── validation/              # Python schema + deterministic validator CLI
+├── agent_runner/            # Provider adapters, bounded repair loop, provenance
 ├── orchestrator/            # Dependency graph, lineage checks, immutable store
 ├── manifest/                # Validated artifact → deterministic manifest
 ├── studio_bridge/           # Non-mutating allowlist/budget/reference dry run
@@ -124,10 +125,11 @@ The first playable vertical slice is one 256×256-stud island with:
 python -m pip install -e .
 python tools/generate_world01_fixtures.py
 python -m validation fixtures/world_01_shadow_forest
+python -m agent_runner "Create World 1" --build-id world01-local-001 --seed 48151623 --provider replay
 python -m orchestrator fixtures/world_01_shadow_forest --store build/artifact-store --manifest-output build/world01.orchestrated.build_manifest.json
 python -m manifest fixtures/world_01_shadow_forest --output build/world01.build_manifest.json
 python -m studio_bridge build/world01.build_manifest.json
 python -m unittest discover -s tests -v
 ```
 
-The checked-in World 1 artifacts and generated manifest are the golden contract for the E-Rank Shadow Forest vertical slice. Their dependency hashes are real canonical content hashes, so stale downstream outputs are rejected. A dry run may pass while `releaseReady` remains false: placeholder audio registry entries intentionally block a production release. See `orchestrator/README.md`, `validation/README.md`, `studio_bridge/README.md`, and `fixtures/README.md`.
+The checked-in World 1 artifacts and generated manifest are the golden contract for the E-Rank Shadow Forest vertical slice. Their dependency hashes are real canonical content hashes, so stale downstream outputs are rejected. The replay provider exercises the complete Agent Runner without network calls. A dry run may pass while `releaseReady` remains false: placeholder audio registry entries intentionally block a production release. See `agent_runner/README.md`, `orchestrator/README.md`, `validation/README.md`, `studio_bridge/README.md`, and `fixtures/README.md`.

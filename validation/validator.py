@@ -74,11 +74,14 @@ class ArtifactValidator:
     def validate_file(self, path: Path | str) -> ValidationReport:
         artifact_path = Path(path)
         artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+        return self.validate_artifact(artifact, name=artifact_path.name)
+
+    def validate_artifact(self, artifact: Any, *, name: str = "artifact.json") -> ValidationReport:
         report = ValidationReport(artifact_count=1)
-        self._validate_schema_and_envelope(artifact, artifact_path.name, report)
+        self._validate_schema_and_envelope(artifact, name, report)
         if not report.ok:
             return report
-        self._validate_single_artifact(artifact, artifact_path.name, report)
+        self._validate_single_artifact(artifact, name, report)
         return report
 
     def validate_directory(self, path: Path | str, *, require_complete: bool = True) -> ValidationReport:

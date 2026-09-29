@@ -240,7 +240,8 @@ Release requires zero unresolved BLOCKER/CRITICAL issues. MAJOR issues require a
 1. Implement schema validation and deterministic validators before model orchestration. **Complete.**
 2. Create World 1 hand-authored golden fixtures to test the pipeline. **Complete.**
 3. Add seeded dependency orchestration, immutable storage, manifest assembly, and Bridge dry-run. **Complete.**
-4. Connect the orchestrator to live model runners with bounded patch rounds and preserved provenance.
-5. Add Studio Bridge diff/apply/undo, then implement the runtime combat/economy slice with placeholder geometry.
-6. Run player tests for time-to-first-kill and first ARISE.
-7. Tune from telemetry and device profiling; only then automate additional worlds.
+4. Connect the orchestrator to replay and optional live model runners with bounded patch rounds and preserved provenance. **Complete.**
+5. Add provider evals and execute a credentialed World 1 generation run before accepting AI-authored artifacts as Golden candidates.
+6. Add Studio Bridge diff/apply/undo, then implement the runtime combat/economy slice with placeholder geometry.
+7. Run player tests for time-to-first-kill and first ARISE.
+8. Tune from telemetry and device profiling; only then automate additional worlds.
