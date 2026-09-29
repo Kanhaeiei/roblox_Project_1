@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "terrain",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "03_terrain",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "terrain",
+    "status": "READY",
+    "scope": {
+      "min": [
+        -128,
+        -16,
+        -128
+      ],
+      "max": [
+        128,
+        80,
+        128
+      ]
+    },
+    "replacePolicy": "generated_namespace_only",
+    "operations": [
+      {
+        "id": "terrain_base",
+        "action": "fill",
+        "shape": "block",
+        "materialToken": "ground_dark",
+        "transform": {
+          "position": [
+            0,
+            -4,
+            0
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "size": [
+          256,
+          8,
+          256
+        ]
+      },
+      {
+        "id": "terrain_spawn_pad",
+        "action": "fill",
+        "shape": "block",
+        "materialToken": "stone_moonlit",
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -96
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "size": [
+          100,
+          2,
+          48
+        ]
+      },
+      {
+        "id": "terrain_boss_pad",
+        "action": "fill",
+        "shape": "cylinder",
+        "materialToken": "stone_corrupted",
+        "transform": {
+          "position": [
+            0,
+            -1,
+            78
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            90
+          ]
+        },
+        "size": [
+          100,
+          2,
+          100
+        ]
+      }
+    ],
+    "foundationMarkerIds": [
+      "marker_foundation_spawn",
+      "marker_foundation_boss"
+    ],
+    "waterContainmentIds": []
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

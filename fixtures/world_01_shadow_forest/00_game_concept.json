@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "gameConcept",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "00_concept",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [],
+  "payload": {
+    "kind": "gameConcept",
+    "status": "READY",
+    "title": "Shadow Army Rebirth — E-Rank Shadow Forest",
+    "audience": "Roblox action-simulator players on mobile, PC, and console",
+    "fantasy": "Defeat enemies and command their shadows as a visible, rapidly growing army.",
+    "differentiator": "Legendary boss shadows are earned through readable fights and guaranteed first-clear ARISE rituals.",
+    "loops": [
+      {
+        "id": "loop_hit_reward",
+        "cadenceSeconds": 5,
+        "steps": [
+          "choose target",
+          "shadows strike",
+          "loot returns"
+        ],
+        "playerDecision": "Select the priority enemy and trigger burst timing."
+      },
+      {
+        "id": "loop_farm_upgrade",
+        "cadenceSeconds": 60,
+        "steps": [
+          "clear pack",
+          "collect mana",
+          "buy deterministic upgrade",
+          "equip squad"
+        ],
+        "playerDecision": "Spend on guaranteed power or an earned-currency summon."
+      },
+      {
+        "id": "loop_boss_arise",
+        "cadenceSeconds": 480,
+        "steps": [
+          "prepare squad",
+          "break boss stance",
+          "defeat boss",
+          "perform arise"
+        ],
+        "playerDecision": "Dodge the tell and commit burst during the break window."
+      }
+    ],
+    "ftue": [
+      {
+        "stepId": "ftue_spawn",
+        "deadlineSeconds": 5,
+        "eventName": "ftue_spawned",
+        "successCondition": "Player gains control facing the first enemy."
+      },
+      {
+        "stepId": "ftue_kill",
+        "deadlineSeconds": 20,
+        "eventName": "ftue_first_kill",
+        "successCondition": "First enemy dies."
+      },
+      {
+        "stepId": "ftue_upgrade",
+        "deadlineSeconds": 60,
+        "eventName": "ftue_first_upgrade",
+        "successCondition": "Player buys guaranteed damage."
+      },
+      {
+        "stepId": "ftue_miniboss",
+        "deadlineSeconds": 240,
+        "eventName": "ftue_miniboss_clear",
+        "successCondition": "Mini-boss is defeated."
+      },
+      {
+        "stepId": "ftue_arise",
+        "deadlineSeconds": 600,
+        "eventName": "ftue_first_arise",
+        "successCondition": "Guaranteed first boss shadow joins the squad."
+      },
+      {
+        "stepId": "ftue_rebirth_goal",
+        "deadlineSeconds": 900,
+        "eventName": "ftue_goal_revealed",
+        "successCondition": "Rebirth reward and requirements are visible."
+      }
+    ],
+    "landmarkIds": [
+      "zone_spawn_hub",
+      "zone_farm_lane",
+      "zone_miniboss",
+      "zone_boss_arena",
+      "zone_rebirth_gate"
+    ],
+    "accessibility": [
+      "non-color rarity icons",
+      "reduced motion",
+      "reduced flashes",
+      "touch and controller parity"
+    ],
+    "monetizationBoundaries": [
+      "no shop before first upgrade",
+      "no paid first-clear extraction",
+      "no fake urgency",
+      "paid randomness disabled for MVP"
+    ],
+    "prototypeRisks": [
+      "auto-combat may feel passive",
+      "squad crowding may hide boss tells",
+      "three-order world jumps may outrun safe integers"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

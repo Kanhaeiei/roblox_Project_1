@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "qa",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "06_qa",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "qa",
+    "status": "APPROVED",
+    "validatorReportHashes": [
+      "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    ],
+    "domainSummaries": [
+      {
+        "domain": "contract",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "experience",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "spatial",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "economy",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "security",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "performance",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "accessibility",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      },
+      {
+        "domain": "release",
+        "passed": true,
+        "evidence": "Golden fixture validated by schema and deterministic checks."
+      }
+    ],
+    "issues": [],
+    "acceptedRisks": [],
+    "readyForStudioBridge": true
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

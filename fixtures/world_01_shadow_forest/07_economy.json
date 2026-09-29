@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "economy",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "07_economy",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "economy",
+    "status": "READY",
+    "safeIntegerCeiling": 9000000000000000,
+    "currencies": [
+      {
+        "id": "mana",
+        "scope": "world",
+        "sources": [
+          "enemy defeats",
+          "mana crystals"
+        ],
+        "sinks": [
+          "guaranteed upgrades",
+          "earned summon"
+        ],
+        "cap": 1000000000,
+        "targetTimeToAffordSeconds": 45
+      },
+      {
+        "id": "essence",
+        "scope": "account",
+        "sources": [
+          "duplicates",
+          "achievements"
+        ],
+        "sinks": [
+          "chosen fusion",
+          "evolution"
+        ],
+        "cap": 10000000,
+        "targetTimeToAffordSeconds": 300
+      },
+      {
+        "id": "rebirth_sigils",
+        "scope": "account",
+        "sources": [
+          "rebirth",
+          "mastery milestones"
+        ],
+        "sinks": [
+          "permanent mastery"
+        ],
+        "cap": 1000000,
+        "targetTimeToAffordSeconds": 1200
+      },
+      {
+        "id": "soul_shards",
+        "scope": "premium",
+        "sources": [
+          "boss challenges",
+          "optional purchase"
+        ],
+        "sinks": [
+          "cosmetics",
+          "non-random quantified boosts"
+        ],
+        "cap": 1000000,
+        "targetTimeToAffordSeconds": 1800
+      }
+    ],
+    "formulas": [
+      {
+        "id": "world_base_power",
+        "expression": "100 * 1000^(worldIndex-1)",
+        "inputs": [
+          "world_index"
+        ],
+        "outputUnit": "power"
+      },
+      {
+        "id": "rebirth_cost",
+        "expression": "round(25000 * 6^r * 1.18^(max(0,r-5)^1.35))",
+        "inputs": [
+          "rebirth_count"
+        ],
+        "outputUnit": "mana"
+      },
+      {
+        "id": "rebirth_power",
+        "expression": "1 + 0.50*r + 0.05*r^2",
+        "inputs": [
+          "rebirth_count"
+        ],
+        "outputUnit": "multiplier"
+      }
+    ],
+    "worldBands": [
+      {
+        "worldId": "world_01_shadow_forest",
+        "basePower": 100,
+        "targetDurationSeconds": 1200
+      }
+    ],
+    "rebirth": {
+      "costFormulaId": "rebirth_cost",
+      "powerFormulaId": "rebirth_power",
+      "baseSquadSlots": 3,
+      "earnedSlotsPerMilestone": 2,
+      "firstTargetSeconds": 1200
+    },
+    "gachaPools": [
+      {
+        "id": "pool_shadow_forest",
+        "currencyId": "mana",
+        "cost": 100,
+        "paidRandomEligible": false,
+        "outcomes": [
+          {
+            "definitionId": "shadow_imp",
+            "rateBasisPoints": 6500
+          },
+          {
+            "definitionId": "shadow_hound",
+            "rateBasisPoints": 2500
+          },
+          {
+            "definitionId": "shadow_mage",
+            "rateBasisPoints": 900
+          },
+          {
+            "definitionId": "shadow_footman",
+            "rateBasisPoints": 100
+          }
+        ],
+        "pityCounterKey": "pity_shadow_forest_legendary",
+        "pityThreshold": 50,
+        "duplicateProtection": "Duplicates award essence and choice-progress toward a selected soldier."
+      }
+    ],
+    "resetManifest": {
+      "reset": [
+        "Currencies.Mana",
+        "Progression.WorldUpgrades"
+      ],
+      "keep": [
+        "Inventory.Shadows",
+        "Entitlements",
+        "Cosmetics",
+        "Pity"
+      ],
+      "transform": [
+        "Progression.RebirthCount += 1",
+        "Currencies.RebirthSigils += reward"
+      ]
+    },
+    "playerData": {
+      "schemaVersion": 1,
+      "defaults": {
+        "Currencies": {
+          "Mana": 0,
+          "Essence": 0,
+          "RebirthSigils": 0,
+          "SoulShards": 0
+        },
+        "Progression": {
+          "RebirthCount": 0,
+          "WorldId": "world_01_shadow_forest"
+        },
+        "Inventory": {
+          "Shadows": []
+        },
+        "Pity": {},
+        "Entitlements": {},
+        "Settings": {
+          "ReducedMotion": false
+        }
+      },
+      "migrations": [],
+      "sessionPolicy": "Server-owned session lease with conflict-safe update and graceful read-only fallback."
+    },
+    "simulations": [
+      {
+        "elapsedSeconds": 300,
+        "expectedPower": 2500,
+        "expectedCurrency": 3000,
+        "unlockedMilestones": [
+          "mini_boss_ready"
+        ]
+      },
+      {
+        "elapsedSeconds": 900,
+        "expectedPower": 50000,
+        "expectedCurrency": 18000,
+        "unlockedMilestones": [
+          "first_arise",
+          "rebirth_goal_visible"
+        ]
+      },
+      {
+        "elapsedSeconds": 1800,
+        "expectedPower": 250000,
+        "expectedCurrency": 80000,
+        "unlockedMilestones": [
+          "first_rebirth"
+        ]
+      },
+      {
+        "elapsedSeconds": 3600,
+        "expectedPower": 1200000,
+        "expectedCurrency": 400000,
+        "unlockedMilestones": [
+          "world_one_mastery"
+        ]
+      }
+    ],
+    "invariants": [
+      "currencies are non-negative integers",
+      "first boss clear guarantees ARISE",
+      "all gacha outcomes total 10000 basis points",
+      "owned boss shadows survive rebirth"
+    ],
+    "remoteRules": [
+      {
+        "intent": "request_target",
+        "ratePerSecond": 8,
+        "validations": [
+          "type",
+          "enemy ownership",
+          "range",
+          "player alive"
+        ]
+      },
+      {
+        "intent": "request_upgrade",
+        "ratePerSecond": 2,
+        "validations": [
+          "type",
+          "server price",
+          "balance",
+          "upgrade state"
+        ]
+      },
+      {
+        "intent": "request_arise",
+        "ratePerSecond": 1,
+        "validations": [
+          "boss clear",
+          "first-clear state",
+          "distance",
+          "not already owned"
+        ]
+      }
+    ],
+    "analyticsEvents": [
+      "ftue_spawned",
+      "ftue_first_kill",
+      "ftue_first_upgrade",
+      "ftue_miniboss_clear",
+      "ftue_first_arise",
+      "ftue_first_rebirth"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

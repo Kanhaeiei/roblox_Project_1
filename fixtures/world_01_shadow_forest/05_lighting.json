@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "lighting",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "05_lighting",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "lighting",
+    "status": "READY",
+    "profiles": [
+      {
+        "tier": "low",
+        "clockTime": 21.0,
+        "brightness": 1.5,
+        "ambient": [
+          45,
+          50,
+          70
+        ],
+        "outdoorAmbient": [
+          55,
+          60,
+          85
+        ],
+        "atmosphereDensity": 0.18,
+        "bloomIntensity": 0.2,
+        "contrast": 0.05,
+        "saturation": 0.0
+      },
+      {
+        "tier": "medium",
+        "clockTime": 21.0,
+        "brightness": 1.8,
+        "ambient": [
+          35,
+          40,
+          65
+        ],
+        "outdoorAmbient": [
+          48,
+          55,
+          82
+        ],
+        "atmosphereDensity": 0.24,
+        "bloomIntensity": 0.45,
+        "contrast": 0.1,
+        "saturation": 0.05
+      },
+      {
+        "tier": "high",
+        "clockTime": 21.0,
+        "brightness": 2.0,
+        "ambient": [
+          30,
+          35,
+          60
+        ],
+        "outdoorAmbient": [
+          45,
+          52,
+          80
+        ],
+        "atmosphereDensity": 0.28,
+        "bloomIntensity": 0.65,
+        "contrast": 0.12,
+        "saturation": 0.08
+      }
+    ],
+    "localLights": [
+      {
+        "id": "light_boss_ritual",
+        "socketInstanceId": "boss_ritual_socket",
+        "type": "point",
+        "colorToken": "arise_violet",
+        "range": 28,
+        "brightness": 1.5,
+        "castsShadows": false
+      },
+      {
+        "id": "light_rebirth_portal",
+        "socketInstanceId": "rebirth_portal_socket",
+        "type": "surface",
+        "colorToken": "mana_cyan",
+        "range": 32,
+        "brightness": 2.0,
+        "castsShadows": false
+      }
+    ],
+    "readabilityTargets": [
+      "enemy silhouettes remain readable",
+      "boss danger red remains distinct",
+      "critical path visible on low tier"
+    ],
+    "fallbackRules": [
+      "disable decorative shadows first",
+      "reduce bloom and local-light range on low tier"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

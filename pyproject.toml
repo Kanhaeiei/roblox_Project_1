@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shadow-army-contracts"
+version = "0.1.0"
+description = "Contract and deterministic validators for Shadow Army Rebirth build artifacts"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.20,<5"]
+
+[project.scripts]
+shadow-validate = "validation.cli:main"
+
+[tool.setuptools]
+packages = ["validation"]

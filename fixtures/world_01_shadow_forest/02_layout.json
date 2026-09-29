@@ -1,0 +1,470 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "layout",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "02_layout",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "layout",
+    "status": "READY",
+    "worldBounds": {
+      "min": [
+        -128,
+        -16,
+        -128
+      ],
+      "max": [
+        128,
+        80,
+        128
+      ]
+    },
+    "zones": [
+      {
+        "zoneId": "zone_spawn_hub",
+        "role": "spawn",
+        "bounds": {
+          "min": [
+            -50,
+            0,
+            -120
+          ],
+          "max": [
+            50,
+            30,
+            -72
+          ]
+        },
+        "allowedOverlapZoneIds": []
+      },
+      {
+        "zoneId": "zone_farm_lane",
+        "role": "farm",
+        "bounds": {
+          "min": [
+            -60,
+            0,
+            -72
+          ],
+          "max": [
+            60,
+            30,
+            20
+          ]
+        },
+        "allowedOverlapZoneIds": []
+      },
+      {
+        "zoneId": "zone_miniboss",
+        "role": "miniboss",
+        "bounds": {
+          "min": [
+            -45,
+            0,
+            20
+          ],
+          "max": [
+            45,
+            35,
+            50
+          ]
+        },
+        "allowedOverlapZoneIds": []
+      },
+      {
+        "zoneId": "zone_boss_arena",
+        "role": "boss",
+        "bounds": {
+          "min": [
+            -50,
+            0,
+            50
+          ],
+          "max": [
+            50,
+            40,
+            105
+          ]
+        },
+        "allowedOverlapZoneIds": []
+      },
+      {
+        "zoneId": "zone_rebirth_gate",
+        "role": "gate",
+        "bounds": {
+          "min": [
+            -25,
+            0,
+            105
+          ],
+          "max": [
+            25,
+            35,
+            128
+          ]
+        },
+        "allowedOverlapZoneIds": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "conn_spawn_farm",
+        "fromZoneId": "zone_spawn_hub",
+        "toZoneId": "zone_farm_lane",
+        "bidirectional": true,
+        "traversalMethod": "walk"
+      },
+      {
+        "id": "conn_farm_miniboss",
+        "fromZoneId": "zone_farm_lane",
+        "toZoneId": "zone_miniboss",
+        "bidirectional": true,
+        "traversalMethod": "walk"
+      },
+      {
+        "id": "conn_miniboss_boss",
+        "fromZoneId": "zone_miniboss",
+        "toZoneId": "zone_boss_arena",
+        "bidirectional": true,
+        "traversalMethod": "walk"
+      },
+      {
+        "id": "conn_boss_gate",
+        "fromZoneId": "zone_boss_arena",
+        "toZoneId": "zone_rebirth_gate",
+        "bidirectional": true,
+        "traversalMethod": "walk"
+      }
+    ],
+    "paths": [
+      {
+        "id": "path_spawn_farm",
+        "connectionId": "conn_spawn_farm",
+        "widthStuds": 14,
+        "waypoints": [
+          [
+            0,
+            1,
+            -96
+          ],
+          [
+            0,
+            1,
+            -72
+          ]
+        ],
+        "critical": true
+      },
+      {
+        "id": "path_farm_miniboss",
+        "connectionId": "conn_farm_miniboss",
+        "widthStuds": 16,
+        "waypoints": [
+          [
+            0,
+            1,
+            -25
+          ],
+          [
+            0,
+            1,
+            20
+          ]
+        ],
+        "critical": true
+      },
+      {
+        "id": "path_miniboss_boss",
+        "connectionId": "conn_miniboss_boss",
+        "widthStuds": 14,
+        "waypoints": [
+          [
+            0,
+            1,
+            35
+          ],
+          [
+            0,
+            1,
+            50
+          ]
+        ],
+        "critical": true
+      },
+      {
+        "id": "path_boss_gate",
+        "connectionId": "conn_boss_gate",
+        "widthStuds": 12,
+        "waypoints": [
+          [
+            0,
+            1,
+            78
+          ],
+          [
+            0,
+            1,
+            105
+          ],
+          [
+            0,
+            1,
+            116
+          ]
+        ],
+        "critical": true
+      }
+    ],
+    "clearanceVolumes": [
+      {
+        "id": "clear_spawn",
+        "purpose": "spawn",
+        "bounds": {
+          "min": [
+            -12,
+            0.25,
+            -108
+          ],
+          "max": [
+            12,
+            12,
+            -84
+          ]
+        }
+      },
+      {
+        "id": "clear_main_route",
+        "purpose": "squad",
+        "bounds": {
+          "min": [
+            -7,
+            0.25,
+            -84
+          ],
+          "max": [
+            7,
+            14,
+            58
+          ]
+        }
+      },
+      {
+        "id": "clear_boss_arena",
+        "purpose": "telegraph",
+        "bounds": {
+          "min": [
+            -40,
+            0.25,
+            58
+          ],
+          "max": [
+            40,
+            24,
+            98
+          ]
+        }
+      },
+      {
+        "id": "clear_gate_route",
+        "purpose": "camera",
+        "bounds": {
+          "min": [
+            -6,
+            0.25,
+            98
+          ],
+          "max": [
+            6,
+            16,
+            124
+          ]
+        }
+      }
+    ],
+    "markers": [
+      {
+        "id": "marker_player_spawn",
+        "type": "player_spawn",
+        "zoneId": "zone_spawn_hub",
+        "transform": {
+          "position": [
+            0,
+            2,
+            -102
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_upgrade_altar",
+        "type": "upgrade",
+        "zoneId": "zone_spawn_hub",
+        "transform": {
+          "position": [
+            -20,
+            1,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            20,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_summon_altar",
+        "type": "summon_altar",
+        "zoneId": "zone_spawn_hub",
+        "transform": {
+          "position": [
+            20,
+            1,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            -20,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_enemy_cluster_a",
+        "type": "enemy_cluster",
+        "zoneId": "zone_farm_lane",
+        "transform": {
+          "position": [
+            -24,
+            1,
+            -48
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_enemy_cluster_b",
+        "type": "enemy_cluster",
+        "zoneId": "zone_farm_lane",
+        "transform": {
+          "position": [
+            24,
+            1,
+            -18
+          ],
+          "orientationDegrees": [
+            0,
+            180,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_miniboss",
+        "type": "miniboss",
+        "zoneId": "zone_miniboss",
+        "transform": {
+          "position": [
+            0,
+            2,
+            36
+          ],
+          "orientationDegrees": [
+            0,
+            180,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_boss",
+        "type": "boss",
+        "zoneId": "zone_boss_arena",
+        "transform": {
+          "position": [
+            0,
+            3,
+            82
+          ],
+          "orientationDegrees": [
+            0,
+            180,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_rebirth_gate",
+        "type": "gate",
+        "zoneId": "zone_rebirth_gate",
+        "transform": {
+          "position": [
+            0,
+            6,
+            116
+          ],
+          "orientationDegrees": [
+            0,
+            180,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_foundation_spawn",
+        "type": "foundation",
+        "zoneId": "zone_spawn_hub",
+        "transform": {
+          "position": [
+            0,
+            0,
+            -96
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "id": "marker_foundation_boss",
+        "type": "foundation",
+        "zoneId": "zone_boss_arena",
+        "transform": {
+          "position": [
+            0,
+            0,
+            78
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    ],
+    "sightlineAssertions": [
+      "marker_player_spawn sees marker_enemy_cluster_a",
+      "marker_miniboss sees marker_boss",
+      "marker_boss sees marker_rebirth_gate"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

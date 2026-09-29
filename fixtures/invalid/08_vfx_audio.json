@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "vfxAudio",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "08_vfx_audio",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "vfxAudio",
+    "status": "READY",
+    "zoneSoundscapes": [
+      {
+        "zoneId": "zone_spawn_hub",
+        "musicRegistryKey": "music_shadow_hub",
+        "ambientRegistryKeys": [
+          "ambience_forest_night"
+        ],
+        "crossfadeSeconds": 2.0
+      },
+      {
+        "zoneId": "zone_boss_arena",
+        "musicRegistryKey": "music_boss_blood_knight",
+        "ambientRegistryKeys": [
+          "ambience_shadow_rumble"
+        ],
+        "crossfadeSeconds": 1.5
+      }
+    ],
+    "effectRecipes": [
+      {
+        "id": "fx_first_arise",
+        "eventName": "boss_arise_approved",
+        "priority": "cinematic",
+        "socketIds": [
+          "boss_ritual_socket",
+          "marker_boss"
+        ],
+        "layers": [
+          "particle",
+          "beam",
+          "highlight",
+          "sound",
+          "camera",
+          "ui",
+          "animation"
+        ],
+        "qualityTiers": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "reducedMotionVariant": "No camera shake; shorter mist and static ownership card.",
+        "skippable": true
+      },
+      {
+        "id": "fx_rebirth_gate",
+        "eventName": "rebirth_gate_ready",
+        "priority": "reward",
+        "socketIds": [
+          "rebirth_portal_socket"
+        ],
+        "layers": [
+          "particle",
+          "light",
+          "sound",
+          "ui"
+        ],
+        "qualityTiers": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "reducedMotionVariant": "Static portal glow with no swirl.",
+        "skippable": false
+      }
+    ],
+    "budgetEstimate": {
+      "nearbyEmitters": 12,
+      "particlesPerSecond": 180,
+      "transparencyLayers": 3,
+      "simultaneousSounds": 12
+    },
+    "accessibilityProfiles": [
+      "default",
+      "reduced_motion",
+      "reduced_flashes",
+      "low_vfx"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

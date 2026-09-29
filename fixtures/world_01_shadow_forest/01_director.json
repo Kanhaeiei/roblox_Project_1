@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "director",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "01_director",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "director",
+    "status": "READY",
+    "worldId": "world_01_shadow_forest",
+    "worldBounds": {
+      "min": [
+        -128,
+        -16,
+        -128
+      ],
+      "max": [
+        128,
+        80,
+        128
+      ]
+    },
+    "theme": "Moonlit E-Rank forest invaded by violet shadow corruption",
+    "paletteTokens": [
+      "shadow_black",
+      "moon_blue",
+      "mana_cyan",
+      "arise_violet",
+      "danger_crimson"
+    ],
+    "zoneBriefs": [
+      {
+        "zoneId": "zone_spawn_hub",
+        "role": "spawn",
+        "gameplayPurpose": "Teach targeting and upgrading",
+        "targetFootprintStuds": [
+          100,
+          48
+        ],
+        "sightlineGoal": "First enemy and distant gate visible",
+        "order": 0
+      },
+      {
+        "zoneId": "zone_farm_lane",
+        "role": "farm",
+        "gameplayPurpose": "Fast unobstructed pack farming",
+        "targetFootprintStuds": [
+          120,
+          92
+        ],
+        "sightlineGoal": "Mini-boss silhouette anchors the route",
+        "order": 1
+      },
+      {
+        "zoneId": "zone_miniboss",
+        "role": "miniboss",
+        "gameplayPurpose": "Teach one telegraphed break mechanic",
+        "targetFootprintStuds": [
+          90,
+          30
+        ],
+        "sightlineGoal": "Boss gate visible after clear",
+        "order": 2
+      },
+      {
+        "zoneId": "zone_boss_arena",
+        "role": "boss",
+        "gameplayPurpose": "First mastery fight and ARISE climax",
+        "targetFootprintStuds": [
+          100,
+          55
+        ],
+        "sightlineGoal": "Boss remains readable from arena entry",
+        "order": 3
+      },
+      {
+        "zoneId": "zone_rebirth_gate",
+        "role": "gate",
+        "gameplayPurpose": "Preview the next world and rebirth reward",
+        "targetFootprintStuds": [
+          50,
+          23
+        ],
+        "sightlineGoal": "Portal is visible behind the boss",
+        "order": 4
+      }
+    ],
+    "budgets": {
+      "instances": 6000,
+      "baseParts": 3500,
+      "uniqueMeshIds": 150,
+      "uniqueTextureIds": 220,
+      "shadowCastingLights": 8,
+      "activeParticleEmittersNearPlayer": 24,
+      "particlesPerSecondNearPlayer": 350,
+      "transparentOverlapLayers": 4,
+      "clientFrameTargetFps": 30
+    },
+    "qualityTiers": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "streamingStrategy": "enabled_spatial",
+    "experienceConstraints": [
+      "first kill within 20 seconds",
+      "critical routes at least 10 studs",
+      "boss telegraphs outrank cosmetics"
+    ]
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

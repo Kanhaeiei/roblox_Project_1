@@ -1,0 +1,411 @@
+{
+  "schemaVersion": "2.0.0",
+  "artifactType": "props",
+  "buildId": "world01-shadow-forest-golden",
+  "stageId": "04_props",
+  "revision": 1,
+  "seed": 48151623,
+  "inputArtifactHashes": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "payload": {
+    "kind": "props",
+    "status": "READY",
+    "namespace": "world01_shadow_forest",
+    "instances": [
+      {
+        "kind": "primitive",
+        "id": "floor_spawn",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          100,
+          2,
+          48
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -96
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "floor_farm",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          120,
+          2,
+          92
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -26
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "ground_dark",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "floor_miniboss",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          90,
+          2,
+          30
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            35
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "floor_boss",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          100,
+          2,
+          55
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            77.5
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "floor_gate",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          50,
+          2,
+          23
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            116.5
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "upgrade_altar",
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          8,
+          4,
+          8
+        ],
+        "transform": {
+          "position": [
+            -20,
+            2,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "mana_cyan",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "interaction",
+          "upgrade"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "summon_altar",
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          8,
+          4,
+          8
+        ],
+        "transform": {
+          "position": [
+            20,
+            2,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "arise_violet",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "interaction",
+          "summon"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "miniboss_totem",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          4,
+          10,
+          4
+        ],
+        "transform": {
+          "position": [
+            18,
+            5,
+            38
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "danger_crimson",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "landmark"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "boss_ritual_socket",
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          24,
+          0.2,
+          24
+        ],
+        "transform": {
+          "position": [
+            0,
+            0.2,
+            82
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "neon",
+        "colorToken": "arise_violet",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "vfx_socket",
+          "boss"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "rebirth_portal_socket",
+        "className": "Part",
+        "parentCategory": "LightingProps",
+        "size": [
+          18,
+          16,
+          1
+        ],
+        "transform": {
+          "position": [
+            0,
+            8,
+            118
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "neon",
+        "colorToken": "mana_cyan",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "vfx_socket",
+          "portal"
+        ]
+      },
+      {
+        "kind": "primitive",
+        "id": "spawn_beacon",
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          4,
+          12,
+          4
+        ],
+        "transform": {
+          "position": [
+            0,
+            6,
+            -116
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "landmark"
+        ]
+      }
+    ],
+    "gameplayMarkerHosts": {
+      "marker_upgrade_altar": "upgrade_altar",
+      "marker_summon_altar": "summon_altar",
+      "marker_boss": "boss_ritual_socket",
+      "marker_rebirth_gate": "rebirth_portal_socket"
+    },
+    "budgetEstimate": {
+      "instances": 11,
+      "baseParts": 11,
+      "uniqueMeshIds": 0,
+      "uniqueTextureIds": 0,
+      "shadowCastingLights": 0,
+      "activeParticleEmittersNearPlayer": 0,
+      "particlesPerSecondNearPlayer": 0,
+      "transparentOverlapLayers": 1,
+      "clientFrameTargetFps": 30
+    }
+  },
+  "assumptions": [
+    "Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."
+  ],
+  "warnings": []
+}

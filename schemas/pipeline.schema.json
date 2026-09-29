@@ -1,0 +1,528 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shadow-army.local/schemas/pipeline.schema.json",
+  "title": "Shadow Army Rebirth Pipeline Artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactType",
+    "buildId",
+    "stageId",
+    "revision",
+    "seed",
+    "inputArtifactHashes",
+    "payload",
+    "assumptions",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "2.0.0" },
+    "artifactType": {
+      "enum": ["gameConcept", "director", "layout", "terrain", "props", "lighting", "economy", "vfxAudio", "qa"]
+    },
+    "buildId": { "$ref": "#/$defs/id" },
+    "stageId": {
+      "enum": ["00_concept", "01_director", "02_layout", "03_terrain", "04_props", "05_lighting", "06_qa", "07_economy", "08_vfx_audio"]
+    },
+    "revision": { "type": "integer", "minimum": 1 },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "inputArtifactHashes": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+      "uniqueItems": true
+    },
+    "payload": {
+      "oneOf": [
+        { "$ref": "#/$defs/gameConcept" },
+        { "$ref": "#/$defs/director" },
+        { "$ref": "#/$defs/layout" },
+        { "$ref": "#/$defs/terrain" },
+        { "$ref": "#/$defs/props" },
+        { "$ref": "#/$defs/lighting" },
+        { "$ref": "#/$defs/economy" },
+        { "$ref": "#/$defs/vfxAudio" },
+        { "$ref": "#/$defs/qa" }
+      ]
+    },
+    "assumptions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "warnings": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"
+    },
+    "status": {
+      "enum": ["READY", "BLOCKED_INPUT"]
+    },
+    "vec2": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "vec3": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "rgb": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "integer", "minimum": 0, "maximum": 255 },
+        { "type": "integer", "minimum": 0, "maximum": 255 },
+        { "type": "integer", "minimum": 0, "maximum": 255 }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "aabb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "$ref": "#/$defs/vec3" },
+        "max": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "orientationDegrees"],
+      "properties": {
+        "position": { "$ref": "#/$defs/vec3" },
+        "orientationDegrees": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instances",
+        "baseParts",
+        "uniqueMeshIds",
+        "uniqueTextureIds",
+        "shadowCastingLights",
+        "activeParticleEmittersNearPlayer",
+        "particlesPerSecondNearPlayer",
+        "transparentOverlapLayers",
+        "clientFrameTargetFps"
+      ],
+      "properties": {
+        "instances": { "type": "integer", "minimum": 1 },
+        "baseParts": { "type": "integer", "minimum": 0 },
+        "uniqueMeshIds": { "type": "integer", "minimum": 0 },
+        "uniqueTextureIds": { "type": "integer", "minimum": 0 },
+        "shadowCastingLights": { "type": "integer", "minimum": 0 },
+        "activeParticleEmittersNearPlayer": { "type": "integer", "minimum": 0 },
+        "particlesPerSecondNearPlayer": { "type": "integer", "minimum": 0 },
+        "transparentOverlapLayers": { "type": "integer", "minimum": 0 },
+        "clientFrameTargetFps": { "type": "integer", "minimum": 30, "maximum": 240 }
+      }
+    },
+
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "cadenceSeconds", "steps", "playerDecision"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "cadenceSeconds": { "type": "integer", "minimum": 1 },
+        "steps": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "playerDecision": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ftueStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stepId", "deadlineSeconds", "eventName", "successCondition"],
+      "properties": {
+        "stepId": { "$ref": "#/$defs/id" },
+        "deadlineSeconds": { "type": "integer", "minimum": 1 },
+        "eventName": { "$ref": "#/$defs/id" },
+        "successCondition": { "type": "string", "minLength": 1 }
+      }
+    },
+    "gameConcept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "title", "audience", "fantasy", "differentiator", "loops", "ftue", "landmarkIds", "accessibility", "monetizationBoundaries", "prototypeRisks"],
+      "properties": {
+        "kind": { "const": "gameConcept" },
+        "status": { "$ref": "#/$defs/status" },
+        "title": { "type": "string", "minLength": 1 },
+        "audience": { "type": "string", "minLength": 1 },
+        "fantasy": { "type": "string", "minLength": 1 },
+        "differentiator": { "type": "string", "minLength": 1 },
+        "loops": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/loop" } },
+        "ftue": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/ftueStep" } },
+        "landmarkIds": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "accessibility": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "monetizationBoundaries": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "prototypeRisks": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "string" } }
+      }
+    },
+
+    "zoneBrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zoneId", "role", "gameplayPurpose", "targetFootprintStuds", "sightlineGoal", "order"],
+      "properties": {
+        "zoneId": { "$ref": "#/$defs/id" },
+        "role": { "enum": ["spawn", "hub", "farm", "miniboss", "boss", "transition", "gate", "boundary"] },
+        "gameplayPurpose": { "type": "string" },
+        "targetFootprintStuds": { "$ref": "#/$defs/vec2" },
+        "sightlineGoal": { "type": "string" },
+        "order": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "director": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "worldId", "worldBounds", "theme", "paletteTokens", "zoneBriefs", "budgets", "qualityTiers", "streamingStrategy", "experienceConstraints"],
+      "properties": {
+        "kind": { "const": "director" },
+        "status": { "$ref": "#/$defs/status" },
+        "worldId": { "$ref": "#/$defs/id" },
+        "worldBounds": { "$ref": "#/$defs/aabb" },
+        "theme": { "type": "string" },
+        "paletteTokens": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "zoneBriefs": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/zoneBrief" } },
+        "budgets": { "$ref": "#/$defs/budgets" },
+        "qualityTiers": { "type": "array", "minItems": 2, "items": { "enum": ["low", "medium", "high"] }, "uniqueItems": true },
+        "streamingStrategy": { "enum": ["disabled_mvp", "enabled_spatial"] },
+        "experienceConstraints": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zoneId", "role", "bounds", "allowedOverlapZoneIds"],
+      "properties": {
+        "zoneId": { "$ref": "#/$defs/id" },
+        "role": { "type": "string" },
+        "bounds": { "$ref": "#/$defs/aabb" },
+        "allowedOverlapZoneIds": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fromZoneId", "toZoneId", "bidirectional", "traversalMethod"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "fromZoneId": { "$ref": "#/$defs/id" },
+        "toZoneId": { "$ref": "#/$defs/id" },
+        "bidirectional": { "type": "boolean" },
+        "traversalMethod": { "enum": ["walk", "ramp", "stairs", "ladder", "jump", "teleport"] }
+      }
+    },
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "connectionId", "widthStuds", "waypoints", "critical"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "connectionId": { "$ref": "#/$defs/id" },
+        "widthStuds": { "type": "number", "minimum": 6 },
+        "waypoints": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/vec3" } },
+        "critical": { "type": "boolean" }
+      }
+    },
+    "clearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "purpose", "bounds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "purpose": { "enum": ["player", "camera", "squad", "spawn", "telegraph", "interaction"] },
+        "bounds": { "$ref": "#/$defs/aabb" }
+      }
+    },
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "zoneId", "transform"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["player_spawn", "enemy_cluster", "miniboss", "boss", "gate", "summon_altar", "upgrade", "interaction", "foundation"] },
+        "zoneId": { "$ref": "#/$defs/id" },
+        "transform": { "$ref": "#/$defs/transform" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "worldBounds", "zones", "connections", "paths", "clearanceVolumes", "markers", "sightlineAssertions"],
+      "properties": {
+        "kind": { "const": "layout" },
+        "status": { "$ref": "#/$defs/status" },
+        "worldBounds": { "$ref": "#/$defs/aabb" },
+        "zones": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/zone" } },
+        "connections": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/connection" } },
+        "paths": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/path" } },
+        "clearanceVolumes": { "type": "array", "items": { "$ref": "#/$defs/clearance" } },
+        "markers": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/marker" } },
+        "sightlineAssertions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "terrainOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action", "shape", "materialToken", "transform", "size"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "action": { "enum": ["fill", "subtract"] },
+        "shape": { "enum": ["block", "ball", "cylinder", "wedge"] },
+        "materialToken": { "$ref": "#/$defs/id" },
+        "transform": { "$ref": "#/$defs/transform" },
+        "size": { "$ref": "#/$defs/vec3" }
+      }
+    },
+    "terrain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "scope", "replacePolicy", "operations", "foundationMarkerIds", "waterContainmentIds"],
+      "properties": {
+        "kind": { "const": "terrain" },
+        "status": { "$ref": "#/$defs/status" },
+        "scope": { "$ref": "#/$defs/aabb" },
+        "replacePolicy": { "enum": ["generated_namespace_only", "empty_region_only"] },
+        "operations": { "type": "array", "items": { "$ref": "#/$defs/terrainOperation" } },
+        "foundationMarkerIds": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true },
+        "waterContainmentIds": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true }
+      }
+    },
+
+    "primitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "className", "parentCategory", "size", "transform", "materialToken", "colorToken", "anchored", "canCollide", "canTouch", "canQuery", "castShadow", "tags"],
+      "properties": {
+        "kind": { "const": "primitive" },
+        "id": { "$ref": "#/$defs/id" },
+        "className": { "enum": ["Part", "WedgePart", "TrussPart"] },
+        "parentCategory": { "enum": ["Structures", "Props", "LightingProps", "Gameplay"] },
+        "size": { "$ref": "#/$defs/vec3" },
+        "transform": { "$ref": "#/$defs/transform" },
+        "materialToken": { "$ref": "#/$defs/id" },
+        "colorToken": { "$ref": "#/$defs/id" },
+        "anchored": { "type": "boolean" },
+        "canCollide": { "type": "boolean" },
+        "canTouch": { "type": "boolean" },
+        "canQuery": { "type": "boolean" },
+        "castShadow": { "type": "boolean" },
+        "tags": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true }
+      }
+    },
+    "prefab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "prefabKey", "parentCategory", "transform", "variant", "lodPolicy", "tags"],
+      "properties": {
+        "kind": { "const": "prefab" },
+        "id": { "$ref": "#/$defs/id" },
+        "prefabKey": { "$ref": "#/$defs/id" },
+        "parentCategory": { "enum": ["Structures", "Props", "LightingProps", "Gameplay"] },
+        "transform": { "$ref": "#/$defs/transform" },
+        "variant": { "$ref": "#/$defs/id" },
+        "lodPolicy": { "enum": ["automatic", "streamed", "persistent_critical"] },
+        "tags": { "type": "array", "items": { "$ref": "#/$defs/id" }, "uniqueItems": true }
+      }
+    },
+    "props": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "namespace", "instances", "gameplayMarkerHosts", "budgetEstimate"],
+      "properties": {
+        "kind": { "const": "props" },
+        "status": { "$ref": "#/$defs/status" },
+        "namespace": { "$ref": "#/$defs/id" },
+        "instances": {
+          "type": "array",
+          "items": { "oneOf": [{ "$ref": "#/$defs/primitive" }, { "$ref": "#/$defs/prefab" }] }
+        },
+        "gameplayMarkerHosts": { "type": "object", "additionalProperties": { "$ref": "#/$defs/id" } },
+        "budgetEstimate": { "$ref": "#/$defs/budgets" }
+      }
+    },
+
+    "lightingProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "clockTime", "brightness", "ambient", "outdoorAmbient", "atmosphereDensity", "bloomIntensity", "contrast", "saturation"],
+      "properties": {
+        "tier": { "enum": ["low", "medium", "high"] },
+        "clockTime": { "type": "number", "minimum": 0, "maximum": 24 },
+        "brightness": { "type": "number", "minimum": 0 },
+        "ambient": { "$ref": "#/$defs/rgb" },
+        "outdoorAmbient": { "$ref": "#/$defs/rgb" },
+        "atmosphereDensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "bloomIntensity": { "type": "number", "minimum": 0 },
+        "contrast": { "type": "number", "minimum": -1, "maximum": 1 },
+        "saturation": { "type": "number", "minimum": -1, "maximum": 1 }
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "profiles", "localLights", "readabilityTargets", "fallbackRules"],
+      "properties": {
+        "kind": { "const": "lighting" },
+        "status": { "$ref": "#/$defs/status" },
+        "profiles": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/lightingProfile" } },
+        "localLights": { "type": "array", "items": { "type": "object" } },
+        "readabilityTargets": { "type": "array", "items": { "type": "string" } },
+        "fallbackRules": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "scope", "sources", "sinks", "cap", "targetTimeToAffordSeconds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "scope": { "enum": ["world", "account", "premium"] },
+        "sources": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "sinks": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "cap": { "type": "integer", "minimum": 1, "maximum": 9000000000000000 },
+        "targetTimeToAffordSeconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "gachaOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitionId", "rateBasisPoints"],
+      "properties": {
+        "definitionId": { "$ref": "#/$defs/id" },
+        "rateBasisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      }
+    },
+    "gachaPool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "currencyId", "cost", "paidRandomEligible", "outcomes", "pityCounterKey", "pityThreshold", "duplicateProtection"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "currencyId": { "$ref": "#/$defs/id" },
+        "cost": { "type": "integer", "minimum": 1, "maximum": 9000000000000000 },
+        "paidRandomEligible": { "type": "boolean" },
+        "outcomes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/gachaOutcome" } },
+        "pityCounterKey": { "$ref": "#/$defs/id" },
+        "pityThreshold": { "type": "integer", "minimum": 1 },
+        "duplicateProtection": { "type": "string", "minLength": 1 }
+      }
+    },
+    "simulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elapsedSeconds", "expectedPower", "expectedCurrency", "unlockedMilestones"],
+      "properties": {
+        "elapsedSeconds": { "enum": [300, 900, 1800, 3600] },
+        "expectedPower": { "type": "integer", "minimum": 0, "maximum": 9000000000000000 },
+        "expectedCurrency": { "type": "integer", "minimum": 0, "maximum": 9000000000000000 },
+        "unlockedMilestones": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+      }
+    },
+    "economy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "safeIntegerCeiling", "currencies", "formulas", "worldBands", "rebirth", "gachaPools", "resetManifest", "playerData", "simulations", "invariants", "remoteRules", "analyticsEvents"],
+      "properties": {
+        "kind": { "const": "economy" },
+        "status": { "$ref": "#/$defs/status" },
+        "safeIntegerCeiling": { "const": 9000000000000000 },
+        "currencies": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/currency" } },
+        "formulas": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "worldBands": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "rebirth": { "type": "object" },
+        "gachaPools": { "type": "array", "items": { "$ref": "#/$defs/gachaPool" } },
+        "resetManifest": { "type": "object" },
+        "playerData": { "type": "object" },
+        "simulations": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/simulation" } },
+        "invariants": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "remoteRules": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "analyticsEvents": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/id" }, "uniqueItems": true }
+      }
+    },
+
+    "effectRecipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "eventName", "priority", "socketIds", "layers", "qualityTiers", "reducedMotionVariant", "skippable"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "eventName": { "$ref": "#/$defs/id" },
+        "priority": { "enum": ["danger", "input", "reward", "ambient"] },
+        "socketIds": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "layers": { "type": "array", "items": { "enum": ["particle", "beam", "trail", "highlight", "light", "sound", "camera", "ui", "animation"] } },
+        "qualityTiers": { "type": "array", "items": { "enum": ["low", "medium", "high"] }, "uniqueItems": true },
+        "reducedMotionVariant": { "type": "string" },
+        "skippable": { "type": "boolean" }
+      }
+    },
+    "vfxAudio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "zoneSoundscapes", "effectRecipes", "budgetEstimate", "accessibilityProfiles"],
+      "properties": {
+        "kind": { "const": "vfxAudio" },
+        "status": { "$ref": "#/$defs/status" },
+        "zoneSoundscapes": { "type": "array", "items": { "type": "object" } },
+        "effectRecipes": { "type": "array", "items": { "$ref": "#/$defs/effectRecipe" } },
+        "budgetEstimate": { "type": "object" },
+        "accessibilityProfiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["default", "reduced_motion", "reduced_flashes", "low_vfx"] },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "qaIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "ownerStageId", "ruleId", "jsonPointer", "evidence", "recommendedPatch"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "severity": { "enum": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR"] },
+        "ownerStageId": { "enum": ["00_concept", "01_director", "02_layout", "03_terrain", "04_props", "05_lighting", "07_economy", "08_vfx_audio"] },
+        "ruleId": { "$ref": "#/$defs/id" },
+        "jsonPointer": { "type": "string", "pattern": "^/" },
+        "evidence": { "type": "string", "minLength": 1 },
+        "recommendedPatch": { "type": "string", "minLength": 1 }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "validatorReportHashes", "domainSummaries", "issues", "acceptedRisks", "readyForStudioBridge"],
+      "properties": {
+        "kind": { "const": "qa" },
+        "status": { "enum": ["APPROVED", "REJECTED_WITH_PATCHES", "BLOCKED_INPUT"] },
+        "validatorReportHashes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "uniqueItems": true
+        },
+        "domainSummaries": { "type": "array", "items": { "type": "object" } },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/qaIssue" } },
+        "acceptedRisks": { "type": "array", "items": { "type": "object" } },
+        "readyForStudioBridge": { "type": "boolean" }
+      }
+    }
+  }
+}
