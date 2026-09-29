@@ -222,11 +222,14 @@ function NativeAdapter.apply(manifest: any): any
 	local stagingRoot, _, deferred = buildStagingRoot(manifest)
 	local terrainSnapshots = Snapshots.captureTerrain(manifest.operations)
 	local lightingSnapshot = Snapshots.captureLighting()
-	local recording = ChangeHistoryService:TryBeginRecording(
-		"ShadowArmyApply_" .. manifest.buildId,
-		"Apply Shadow Army build " .. manifest.buildId
-	)
-	assert(recording, "Could not begin Studio change-history recording")
+	local recording = nil
+	if not ChangeHistoryService:IsRecordingInProgress() then
+		recording = ChangeHistoryService:TryBeginRecording(
+			"ShadowArmyApply_" .. manifest.buildId,
+			"Apply Shadow Army build " .. manifest.buildId
+		)
+		assert(recording, "Could not begin Studio change-history recording")
+	end
 	local generated = Workspace:FindFirstChild("Generated")
 	local createdGenerated = false
 	assert(not generated or generated:IsA("Folder"), "Workspace.Generated exists but is not a Folder")
@@ -267,11 +270,15 @@ function NativeAdapter.apply(manifest: any): any
 		if createdGenerated and #generated:GetChildren() == 0 then
 			generated:Destroy()
 		end
-		ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Cancel)
+		if recording then
+			ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Cancel)
+		end
 		error(failure)
 	end
 
-	ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+	if recording then
+		ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+	end
 	if lightingSnapshot.generatedEffects then
 		lightingSnapshot.generatedEffects:Destroy()
 	end

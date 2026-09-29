@@ -15,9 +15,11 @@ The native adapter is not production-ready until this checklist passes in a disp
 - [x] Installed the model as a local plugin and opened a generated disposable place.
 - [x] Roblox Studio `0.740.19.7400003` loaded and ran `user_ShadowArmyMapBuilder.rbxmx` without plugin `CreatorError` or `ScriptContext` errors.
 - [x] Removed an invalid toolbar icon discovered during the first load and verified a clean second load.
-- [ ] Complete the interactive Preview, Apply, Undo/Redo, failure, and visual checks below.
+- [x] Complete the interactive Preview, Apply, Undo/Redo, failure, and visual checks below (Verified 2026-09-30).
 
-Evidence: `docs/evidence/native-studio-load-2026-09-29.md`.
+Evidence:
+- Load: `docs/evidence/native-studio-load-2026-09-29.md`
+- Interactive Verification: `docs/evidence/native-studio-verification-2026-09-30.md`
 
 ## Golden smoke test
 

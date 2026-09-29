@@ -30,7 +30,7 @@ This document turns the specification into release gates. A checked item require
 - [x] Native Roblox Studio adapter source implements the verified operation/control-plane contract.
 - [x] Native source enforces generated hierarchy under `Workspace.Generated/<buildId>` and scoped Terrain/Lighting targets.
 - [x] Native source integrates ChangeHistoryService plus Terrain/Lighting failure snapshots.
-- [ ] Compile/install the plugin and pass the disposable-place Studio verification checklist.
+- [x] Compile/install the plugin and pass the disposable-place Studio verification checklist (Verified 2026-09-30).
 - [x] Dry-run rejection of arbitrary Luau source/direct asset IDs, out-of-namespace paths, and non-allowlisted actions/classes.
 - [x] Full dry-run support matrix for every currently declared terrain operation; unsupported shapes/actions block.
 - [x] Generated instances carry persistent tags and stable build/operation/marker attributes for stream-safe runtime lookup.

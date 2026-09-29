@@ -99,13 +99,17 @@ local function showError(message: string)
 	applyButton.AutoButtonColor = false
 end
 
-previewButton.Activated:Connect(function()
+local automation = Instance.new("BindableFunction")
+automation.Name = "AutomationBridge"
+automation.Parent = container
+
+local function runPreview(): (boolean, any)
 	local ok, result = pcall(function()
 		return NativeAdapter.preview(decodeManifest())
 	end)
 	if not ok then
 		showError("Preview blocked: " .. tostring(result))
-		return
+		return false, tostring(result)
 	end
 	previewedText = manifestBox.Text
 	applyButton.BackgroundColor3 = Color3.fromRGB(75, 145, 95)
@@ -117,7 +121,32 @@ previewButton.Activated:Connect(function()
 		result.operationCount,
 		tostring(result.existingBuildWillBeReplaced)
 	)
-end)
+	return true, result
+end
+
+local function runApply(): (boolean, any)
+	if not previewedText or manifestBox.Text ~= previewedText then
+		showError("Apply blocked: preview the unchanged manifest first")
+		return false, "Apply blocked: preview the unchanged manifest first"
+	end
+	applyButton.Active = false
+	local ok, result = pcall(function()
+		return NativeAdapter.apply(decodeManifest())
+	end)
+	applyButton.Active = true
+	if not ok then
+		showError("Apply rolled back: " .. tostring(result))
+		return false, tostring(result)
+	end
+	status.TextColor3 = Color3.fromRGB(130, 225, 155)
+	status.Text = string.format("Applied %s (%d operations). Use Studio Undo to revert.", result.buildId, result.operationCount)
+	previewedText = nil
+	applyButton.BackgroundColor3 = Color3.fromRGB(75, 75, 80)
+	applyButton.AutoButtonColor = false
+	return true, result
+end
+
+previewButton.Activated:Connect(runPreview)
 
 manifestBox:GetPropertyChangedSignal("Text"):Connect(function()
 	if previewedText and manifestBox.Text ~= previewedText then
@@ -129,26 +158,30 @@ manifestBox:GetPropertyChangedSignal("Text"):Connect(function()
 	end
 end)
 
-applyButton.Activated:Connect(function()
-	if not previewedText or manifestBox.Text ~= previewedText then
-		showError("Apply blocked: preview the unchanged manifest first")
-		return
+applyButton.Activated:Connect(runApply)
+
+automation.OnInvoke = function(action: string, param: any): any
+	if action == "SetManifest" then
+		manifestBox.Text = tostring(param)
+		return true
+	elseif action == "Preview" then
+		return runPreview()
+	elseif action == "Apply" then
+		return runApply()
+	elseif action == "GetStatus" then
+		return {
+			text = status.Text,
+			previewedText = previewedText,
+			applyButtonColor = {
+				r = applyButton.BackgroundColor3.R,
+				g = applyButton.BackgroundColor3.G,
+				b = applyButton.BackgroundColor3.B,
+			},
+			applyButtonAutoColor = applyButton.AutoButtonColor,
+		}
 	end
-	applyButton.Active = false
-	local ok, result = pcall(function()
-		return NativeAdapter.apply(decodeManifest())
-	end)
-	applyButton.Active = true
-	if not ok then
-		showError("Apply rolled back: " .. tostring(result))
-		return
-	end
-	status.TextColor3 = Color3.fromRGB(130, 225, 155)
-	status.Text = string.format("Applied %s (%d operations). Use Studio Undo to revert.", result.buildId, result.operationCount)
-	previewedText = nil
-	applyButton.BackgroundColor3 = Color3.fromRGB(75, 75, 80)
-	applyButton.AutoButtonColor = false
-end)
+	return nil
+end
 
 toggleButton.Click:Connect(function()
 	widget.Enabled = not widget.Enabled
