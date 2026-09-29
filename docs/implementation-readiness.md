@@ -21,7 +21,7 @@ This document turns the specification into release gates. A checked item require
 - [x] Registry allowlists for prefabs/assets, bridge actions, folders, classes, and terrain shapes.
 - [x] Manifest-level multi-dimensional planned-versus-limit performance ledger.
 - [x] Gacha basis-point totals for authored pools.
-- [ ] Economy simulation, safe-integer, cap, affordability, and reset invariants.
+- [x] Economy simulation, safe-integer, cap, affordability, and reset invariants (Verified 2026-09-30).
 
 ## Studio Bridge
 
@@ -41,7 +41,7 @@ This document turns the specification into release gates. A checked item require
 - [ ] Typed/narrow remotes with context, value, distance/state checks, and rate limits.
 - [ ] Idempotent developer-product receipt handling.
 - [ ] Versioned player data, ordered migrations, session conflict policy, retry/backoff, and failure UX.
-- [ ] Number-format module separated from stored values.
+- [x] Number-format module separated from stored values (Python `economy.formatter` and Luau `NumberFormatter.lua`).
 - [ ] Analytics event registry and onboarding funnel.
 
 ## Vertical slice

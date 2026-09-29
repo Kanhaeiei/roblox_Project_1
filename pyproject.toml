@@ -19,6 +19,7 @@ shadow-bridge-dry-run = "studio_bridge.cli:main"
 shadow-bridge-control = "studio_bridge.control_cli:main"
 shadow-orchestrate = "orchestrator.cli:main"
 shadow-agent-run = "agent_runner.cli:main"
+shadow-economy = "economy.cli:main"
 
 [tool.setuptools]
-packages = ["validation", "manifest", "studio_bridge", "orchestrator", "agent_runner"]
+packages = ["validation", "manifest", "studio_bridge", "orchestrator", "agent_runner", "economy"]

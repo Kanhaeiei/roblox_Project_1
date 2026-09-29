@@ -321,6 +321,16 @@ class ArtifactValidator:
             report.add("economy.simulation_checkpoints", "/payload/simulations", f"Expected checkpoints {sorted(ECONOMY_CHECKPOINTS)}", artifact=name)
 
         self._check_safe_integers(payload, name, report)
+        try:
+            from economy.simulator import EconomySimulator
+            sim = EconomySimulator(payload)
+            sim_results = sim.simulate(max_seconds=3600)
+            checks = sim.verify_invariants(sim_results)
+            for check in checks:
+                if not check.passed:
+                    report.add(f"economy.{check.name}", "/payload", check.detail, artifact=name)
+        except Exception as err:
+            report.add("economy.simulation_error", "/payload", f"Simulation failed: {err}", artifact=name)
 
     def _check_safe_integers(self, value: Any, name: str, report: ValidationReport, path: str = "/payload") -> None:
         if isinstance(value, bool):
