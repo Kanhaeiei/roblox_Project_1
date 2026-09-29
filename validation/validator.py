@@ -293,7 +293,7 @@ class ArtifactValidator:
             if not _positive_vec3(size):
                 report.add("terrain.invalid_size", f"/payload/operations/{index}/size", "Terrain operation size must be positive", artifact=name)
                 continue
-            bounds = _center_size_aabb(transform.get("position"), size)
+            bounds = _terrain_aabb(operation)
             if bounds and not _contains(scope, bounds):
                 report.add("terrain.operation_outside_scope", f"/payload/operations/{index}", "Terrain operation exceeds its scoped bounds", artifact=name)
 
@@ -369,9 +369,26 @@ class ArtifactValidator:
         if terrain and layout:
             if not _contains(layout.get("worldBounds"), terrain.get("scope")):
                 report.add("cross.terrain_scope_outside_world", "/payload/scope", "Terrain scope must stay inside worldBounds", artifact=names.get("terrain"))
+            world_bounds = layout.get("worldBounds")
+            if _valid_aabb(world_bounds):
+                for index, operation in enumerate(terrain.get("operations", [])):
+                    if not isinstance(operation, Mapping):
+                        continue
+                    op_bounds = _terrain_aabb(operation)
+                    if op_bounds and not _contains(world_bounds, op_bounds):
+                        report.add(
+                            "cross.terrain_operation_outside_world",
+                            f"/payload/operations/{index}",
+                            f"Terrain operation {operation.get('id')!r} exceeds worldBounds",
+                            artifact=names.get("terrain"),
+                        )
+            self._validate_terrain_subtract(terrain, layout, names.get("terrain"), report)
             for index, marker_id in enumerate(terrain.get("foundationMarkerIds", [])):
                 if marker_id not in marker_ids:
                     report.add("ref.unknown_foundation_marker", f"/payload/foundationMarkerIds/{index}", "Unknown layout marker ID", artifact=names.get("terrain"))
+
+        if props:
+            self._validate_structure_support(props, terrain, names.get("props"), report)
 
         if props and layout:
             for marker_id, instance_id in props.get("gameplayMarkerHosts", {}).items():
@@ -419,6 +436,149 @@ class ArtifactValidator:
                         f"Collidable instance {instance.get('id')!r} intersects clearance {clearance.get('id')!r}",
                         artifact=name,
                     )
+
+    def _validate_terrain_subtract(self, terrain: Mapping[str, Any], layout: Mapping[str, Any], name: str | None, report: ValidationReport) -> None:
+        zones = layout.get("zones", [])
+        zone_by_id = {z.get("zoneId"): z for z in zones if isinstance(z, Mapping)}
+        zone_by_role = {z.get("role"): z for z in zones if isinstance(z, Mapping)}
+
+        spawn_zone = zone_by_role.get("spawn") or zone_by_id.get("zone_spawn_hub")
+        boss_zone = zone_by_role.get("boss") or zone_by_id.get("zone_boss_arena")
+
+        protected_boxes: list[tuple[str, dict[str, list[float]]]] = []
+
+        if spawn_zone and _valid_aabb(spawn_zone.get("bounds")):
+            sb = spawn_zone["bounds"]
+            protected_boxes.append((
+                "spawn hub floor",
+                {
+                    "min": [sb["min"][0], sb["min"][1] - 4.0, sb["min"][2]],
+                    "max": [sb["max"][0], sb["min"][1] + 2.0, sb["max"][2]],
+                },
+            ))
+
+        if boss_zone and _valid_aabb(boss_zone.get("bounds")):
+            bb = boss_zone["bounds"]
+            protected_boxes.append((
+                "boss arena floor",
+                {
+                    "min": [bb["min"][0], bb["min"][1] - 4.0, bb["min"][2]],
+                    "max": [bb["max"][0], bb["min"][1] + 2.0, bb["max"][2]],
+                },
+            ))
+
+        for path in layout.get("paths", []):
+            if not isinstance(path, Mapping) or not path.get("critical"):
+                continue
+            width = float(path.get("widthStuds", 10))
+            half_w = width / 2.0
+            waypoints = [wp for wp in path.get("waypoints", []) if _vec3(wp)]
+            if not waypoints:
+                continue
+            xs = [wp[0] for wp in waypoints]
+            ys = [wp[1] for wp in waypoints]
+            zs = [wp[2] for wp in waypoints]
+            protected_boxes.append((
+                f"critical path {path.get('id')!r}",
+                {
+                    "min": [min(xs) - half_w, min(ys) - 4.0, min(zs) - half_w],
+                    "max": [max(xs) + half_w, max(ys) + 2.0, max(zs) + half_w],
+                },
+            ))
+
+        for index, operation in enumerate(terrain.get("operations", [])):
+            if not isinstance(operation, Mapping):
+                continue
+            if operation.get("action") in {"subtract", "terrain_subtract"}:
+                bounds = _terrain_aabb(operation)
+                if not bounds:
+                    continue
+                for label, p_box in protected_boxes:
+                    if _overlap(bounds, p_box):
+                        report.add(
+                            "terrain.subtract_violates_protected_area",
+                            f"/payload/operations/{index}",
+                            f"Terrain subtract {operation.get('id')!r} intersects protected area: {label}",
+                            artifact=name,
+                        )
+                        break
+
+    def _validate_structure_support(self, props: Mapping[str, Any], terrain: Mapping[str, Any] | None, name: str | None, report: ValidationReport) -> None:
+        instances = props.get("instances", [])
+        foundation_boxes: list[tuple[str, dict[str, list[float]]]] = []
+        for instance in instances:
+            if not isinstance(instance, Mapping):
+                continue
+            tags = set(instance.get("tags", []))
+            if "foundation" in tags:
+                bounds = _primitive_aabb(instance)
+                if bounds:
+                    foundation_boxes.append((instance.get("id"), bounds))
+
+        terrain_fill_boxes: list[tuple[str, dict[str, list[float]]]] = []
+        if terrain:
+            for operation in terrain.get("operations", []):
+                if not isinstance(operation, Mapping):
+                    continue
+                if operation.get("action") in {"fill", "terrain_fill"}:
+                    bounds = _terrain_aabb(operation)
+                    if bounds:
+                        terrain_fill_boxes.append((operation.get("id"), bounds))
+
+        critical_categories = {"Structures", "Gameplay"}
+        critical_tags = {"landmark", "interaction", "vfx_socket"}
+
+        for index, instance in enumerate(instances):
+            if not isinstance(instance, Mapping):
+                continue
+            category = instance.get("parentCategory")
+            collide = instance.get("canCollide", False)
+            tags = set(instance.get("tags", []))
+            is_critical = category in critical_categories or collide or bool(tags & critical_tags)
+            if not is_critical:
+                continue
+
+            bounds = _primitive_aabb(instance)
+            if not bounds:
+                continue
+
+            bottom_y = bounds["min"][1]
+            is_foundation = "foundation" in tags
+
+            supported = False
+
+            if not is_foundation:
+                for f_id, f_bounds in foundation_boxes:
+                    if instance.get("id") == f_id:
+                        continue
+                    if _horizontal_overlap(bounds, f_bounds):
+                        top_y = f_bounds["max"][1]
+                        if abs(bottom_y - top_y) <= 0.25:
+                            supported = True
+                            break
+
+            if not supported and terrain_fill_boxes:
+                for t_id, t_bounds in terrain_fill_boxes:
+                    if _horizontal_overlap(bounds, t_bounds):
+                        t_top = t_bounds["max"][1]
+                        t_bottom = t_bounds["min"][1]
+                        if abs(bottom_y - t_top) <= 0.25:
+                            supported = True
+                            break
+                        if is_foundation and t_bottom <= bottom_y <= t_top:
+                            supported = True
+                            break
+
+            if not supported and not terrain and is_foundation:
+                supported = True
+
+            if not supported:
+                report.add(
+                    "spatial.unsupported_structure",
+                    f"/payload/instances/{index}",
+                    f"Structure instance {instance.get('id')!r} is floating without foundation or terrain support",
+                    artifact=name,
+                )
 
 
 def _payload(artifacts: Mapping[str, Mapping[str, Any]], artifact_type: str) -> Mapping[str, Any] | None:
@@ -474,24 +634,102 @@ def _center_size_aabb(position: Any, size: Any) -> dict[str, list[float]] | None
     }
 
 
+def _rotation_matrix(rx_deg: float, ry_deg: float, rz_deg: float) -> tuple[tuple[float, float, float], ...]:
+    rx, ry, rz = math.radians(rx_deg), math.radians(ry_deg), math.radians(rz_deg)
+    cx, sx = math.cos(rx), math.sin(rx)
+    cy, sy = math.cos(ry), math.sin(ry)
+    cz, sz = math.cos(rz), math.sin(rz)
+    return (
+        (cy * cz + sy * sx * sz, -cy * sz + sy * sx * cz, sy * cx),
+        (cx * sz, cx * cz, -sx),
+        (-sy * cz + cy * sx * sz, sy * sz + cy * sx * cz, cy * cx),
+    )
+
+
+def _horizontal_overlap(left: Mapping[str, Sequence[float]], right: Mapping[str, Sequence[float]]) -> bool:
+    return (
+        left["min"][0] < right["max"][0]
+        and right["min"][0] < left["max"][0]
+        and left["min"][2] < right["max"][2]
+        and right["min"][2] < left["max"][2]
+    )
+
+
 def _primitive_aabb(instance: Mapping[str, Any]) -> dict[str, list[float]] | None:
     size = instance.get("size")
     transform = instance.get("transform")
     if not (_positive_vec3(size) and isinstance(transform, Mapping) and _vec3(transform.get("position")) and _vec3(transform.get("orientationDegrees"))):
         return None
 
-    rx, ry, rz = [math.radians(value) for value in transform["orientationDegrees"]]
-    cx, sx = math.cos(rx), math.sin(rx)
-    cy, sy = math.cos(ry), math.sin(ry)
-    cz, sz = math.cos(rz), math.sin(rz)
-    rotation = (
-        (cy * cz, cz * sx * sy - cx * sz, sx * sz + cx * cz * sy),
-        (cy * sz, cx * cz + sx * sy * sz, cx * sy * sz - cz * sx),
-        (-sy, cy * sx, cx * cy),
-    )
+    rotation = _rotation_matrix(*transform["orientationDegrees"])
     half = [component / 2 for component in size]
     extent = [sum(abs(rotation[row][column]) * half[column] for column in range(3)) for row in range(3)]
     position = transform["position"]
+    return {
+        "min": [position[i] - extent[i] for i in range(3)],
+        "max": [position[i] + extent[i] for i in range(3)],
+    }
+
+
+def _terrain_aabb(operation: Mapping[str, Any]) -> dict[str, list[float]] | None:
+    size = operation.get("size")
+    transform = operation.get("transform")
+    shape = operation.get("shape", "block")
+    if not (_positive_vec3(size) and isinstance(transform, Mapping) and _vec3(transform.get("position")) and _vec3(transform.get("orientationDegrees"))):
+        return None
+
+    position = transform["position"]
+    rotation = _rotation_matrix(*transform["orientationDegrees"])
+
+    if shape == "ball":
+        radius = max(size) / 2.0
+        return {
+            "min": [position[i] - radius for i in range(3)],
+            "max": [position[i] + radius for i in range(3)],
+        }
+
+    if shape == "cylinder":
+        # In Roblox Part convention, cylinder height is along local X (RightVector R[:, 0]),
+        # while Terrain:FillCylinder axis is along local Y (UpVector R[:, 1]).
+        # If orientation has RightVector pointing along world Y (e.g. [0, 0, 90]),
+        # the cylinder was oriented with Part conventions to stand vertical.
+        if abs(rotation[1][0]) > 0.99:
+            axis = (rotation[0][0], rotation[1][0], rotation[2][0])
+        else:
+            axis = (rotation[0][1], rotation[1][1], rotation[2][1])
+        h = size[1]
+        r = max(size[0], size[2]) / 2.0
+        extent = [
+            (h / 2.0) * abs(axis[i]) + r * math.sqrt(max(0.0, 1.0 - axis[i] ** 2))
+            for i in range(3)
+        ]
+        return {
+            "min": [position[i] - extent[i] for i in range(3)],
+            "max": [position[i] + extent[i] for i in range(3)],
+        }
+
+    if shape == "wedge":
+        half = [s / 2.0 for s in size]
+        local_vertices = [
+            [-half[0], -half[1], -half[2]],
+            [ half[0], -half[1], -half[2]],
+            [-half[0], -half[1],  half[2]],
+            [ half[0], -half[1],  half[2]],
+            [-half[0],  half[1],  half[2]],
+            [ half[0],  half[1],  half[2]],
+        ]
+        world_vertices = [
+            [position[i] + sum(rotation[i][j] * v[j] for j in range(3)) for i in range(3)]
+            for v in local_vertices
+        ]
+        return {
+            "min": [min(v[i] for v in world_vertices) for i in range(3)],
+            "max": [max(v[i] for v in world_vertices) for i in range(3)],
+        }
+
+    # Default: "block"
+    half = [component / 2 for component in size]
+    extent = [sum(abs(rotation[row][column]) * half[column] for column in range(3)) for row in range(3)]
     return {
         "min": [position[i] - extent[i] for i in range(3)],
         "max": [position[i] + extent[i] for i in range(3)],

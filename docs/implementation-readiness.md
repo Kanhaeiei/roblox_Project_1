@@ -17,7 +17,7 @@ This document turns the specification into release gates. A checked item require
 - [x] World/zone bounds and overlap rules.
 - [x] Graph reachability and reciprocal connections.
 - [x] Clearance volumes versus collidable primitive instances.
-- [ ] Terrain/structure support and scoped mutation.
+- [x] Terrain/structure support and scoped mutation (Analytical $R_y \cdot R_x \cdot R_z$ AABB, terrain subtract protected area, structure support).
 - [x] Registry allowlists for prefabs/assets, bridge actions, folders, classes, and terrain shapes.
 - [x] Manifest-level multi-dimensional planned-versus-limit performance ledger.
 - [x] Gacha basis-point totals for authored pools.

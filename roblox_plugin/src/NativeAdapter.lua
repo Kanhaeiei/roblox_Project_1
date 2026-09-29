@@ -100,7 +100,11 @@ local function applyTerrain(operation: any)
 	elseif payload.shape == "ball" then
 		Workspace.Terrain:FillBall(cframe.Position, math.max(size.X, size.Y, size.Z) / 2, material)
 	elseif payload.shape == "cylinder" then
-		Workspace.Terrain:FillCylinder(cframe, size.Y, math.max(size.X, size.Z) / 2, material)
+		local cylinderCFrame = cframe
+		if math.abs(cframe.RightVector.Y) > 0.9 then
+			cylinderCFrame = cframe * CFrame.Angles(0, 0, -math.pi / 2)
+		end
+		Workspace.Terrain:FillCylinder(cylinderCFrame, size.Y, math.max(size.X, size.Z) / 2, material)
 	elseif payload.shape == "wedge" then
 		Workspace.Terrain:FillWedge(cframe, size, material)
 	else
