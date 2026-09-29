@@ -167,6 +167,10 @@ Config.RemoteRules = {
 		ratePerSecond = 1,
 		validations = { "balance", "cost formula" },
 	},
+	request_snapshot = {
+		ratePerSecond = 4,
+		validations = { "session active" },
+	},
 }
 
 Config.AnalyticsEvents = {

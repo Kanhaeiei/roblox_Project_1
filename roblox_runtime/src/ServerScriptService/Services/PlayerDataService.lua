@@ -208,13 +208,13 @@ function PlayerDataService.loadSession(player: any): (PlayerProfile, boolean)
 	local currentJobId = game.JobId ~= "" and game.JobId or "StandaloneJob"
 	local newSessionToken = generateSessionToken(player)
 
+	local conflictDetected = false
 	local ok, record, err = executeWithRetry(function()
 		return currentAdapter.updateAsync(key, function(prevRecord: SessionRecord?)
 			if prevRecord and prevRecord.sessionToken and prevRecord.sessionToken ~= "" then
 				-- Check if existing lease is unexpired and held by a different session
 				if (now - prevRecord.leaseTimestamp) < LEASE_DURATION then
-					-- Active lease held by another server/session!
-					-- Do NOT overwrite. Return prevRecord so we can inspect and enter read-only mode.
+					conflictDetected = true
 					return prevRecord
 				end
 			end
@@ -247,8 +247,7 @@ function PlayerDataService.loadSession(player: any): (PlayerProfile, boolean)
 	-- Check whether we acquired the lease or if another session owns it
 	local isReadOnly = false
 	local isConflicted = false
-	if record.sessionToken ~= newSessionToken then
-		-- Another session holds the unexpired lease!
+	if conflictDetected or record.sessionToken ~= newSessionToken then
 		isReadOnly = true
 		isConflicted = true
 		warn("[PlayerDataService] Session conflict for player", player.UserId, "- lease owned by token:", record.sessionToken)
@@ -256,7 +255,7 @@ function PlayerDataService.loadSession(player: any): (PlayerProfile, boolean)
 
 	local profile = record.data or PlayerDataService.getDefaultProfile()
 	activeSessions[player] = {
-		sessionToken = if isReadOnly then record.sessionToken else newSessionToken,
+		sessionToken = if isReadOnly then (record.sessionToken or newSessionToken) else newSessionToken,
 		data = profile,
 		isReadOnly = isReadOnly,
 		isDirty = false,
@@ -281,13 +280,15 @@ function PlayerDataService.saveSession(player: any, releaseLease: boolean): bool
 	local now = os.time()
 	local currentJobId = game.JobId ~= "" and game.JobId or "StandaloneJob"
 	local myToken = session.sessionToken
+	local conflictDetected = false
 
 	local ok, resultRecord, err = executeWithRetry(function()
 		return currentAdapter.updateAsync(key, function(prevRecord: SessionRecord?)
-			if prevRecord and prevRecord.sessionToken and prevRecord.sessionToken ~= myToken then
+			if prevRecord and prevRecord.sessionToken and prevRecord.sessionToken ~= "" and prevRecord.sessionToken ~= myToken then
 				if (now - prevRecord.leaseTimestamp) < LEASE_DURATION then
 					-- Ownership lost! Another session acquired the lease.
 					-- Abort write by returning nil.
+					conflictDetected = true
 					return nil
 				end
 			end
@@ -301,19 +302,20 @@ function PlayerDataService.saveSession(player: any, releaseLease: boolean): bool
 		end)
 	end)
 
+	if conflictDetected then
+		session.isReadOnly = true
+		session.isConflicted = true
+		warn("[PlayerDataService] Ownership lost for player", player.UserId, "- session entered read-only mode")
+		return false
+	end
+
 	if not ok or not resultRecord then
-		-- Save failed or write was aborted due to token conflict
-		if err and string.find(err, "conflict") then
-			session.isReadOnly = true
-			session.isConflicted = true
-		end
 		warn("[PlayerDataService] Save failed for player", player.UserId, "Error:", err)
 		return false
 	end
 
 	-- Verify the written record actually matches our token (or empty on release)
 	if not releaseLease and resultRecord.sessionToken ~= myToken then
-		-- Lease was taken over concurrently!
 		session.isReadOnly = true
 		session.isConflicted = true
 		warn("[PlayerDataService] Lease lost during save for player", player.UserId)
@@ -426,7 +428,22 @@ function PlayerDataService.deductCurrency(player: any, currencyId: string, amoun
 	return true, nil
 end
 
+function PlayerDataService.addShadow(player: any, shadow: ShadowEntity): (boolean, string?)
+	local session = activeSessions[player]
+	if not session then
+		return false, "No active session"
+	end
+	if session.isReadOnly then
+		return false, "Session is read-only"
+	end
+
+	table.insert(session.data.Inventory.Shadows, shadow)
+	session.isDirty = true
+	return true, nil
+end
+
 -- Developer Product receipt handling
+-- Hardened against currency cap, save failure, ambiguous outcome, and duplicate receipts
 function PlayerDataService.processReceipt(receiptInfo: {
 	PurchaseId: string,
 	PlayerId: number,
@@ -446,41 +463,131 @@ function PlayerDataService.processReceipt(receiptInfo: {
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	-- 3. Lookup player
+	-- 3. Lookup player & active session
 	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
 	local session = player and activeSessions[player]
+	if not session then
+		for p, s in pairs(activeSessions) do
+			if p.UserId == receiptInfo.PlayerId then
+				player = p
+				session = s
+				break
+			end
+		end
+	end
 	if not session or session.isReadOnly then
 		-- Player not present or in read-only mode; do not grant or mark processed
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	-- 4. Idempotency check: already granted?
-	if session.data.PurchaseHistory[receiptInfo.PurchaseId] then
+	-- 4. Idempotency check in local memory
+	if session.data.PurchaseHistory and session.data.PurchaseHistory[receiptInfo.PurchaseId] then
 		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 
-	-- 5. Atomic grant + purchase-history update
+	-- 5. Currency Cap check BEFORE touching memory
 	local targetCurrency = productDef.currency
 	local grantAmount = productDef.amount
-	local granted, grantErr = PlayerDataService.addCurrency(player, targetCurrency, grantAmount)
-	if not granted then
-		warn("[PlayerDataService] Failed to grant product currency:", grantErr)
+	local meta = (Config.Currencies :: any)[targetCurrency]
+	local cap = meta and meta.cap or Config.SafeIntegerCeiling
+	local currentBalance = session.data.Currencies[targetCurrency] or 0
+
+	if currentBalance + grantAmount > cap then
+		warn("[PlayerDataService] Product grant would exceed currency cap for player", receiptInfo.PlayerId, "PurchaseId:", receiptInfo.PurchaseId)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	session.data.PurchaseHistory[receiptInfo.PurchaseId] = os.time()
-	session.isDirty = true
+	-- 6. Atomic grant and save commit via UpdateAsync
+	-- Commit directly into DataStore so memory is never modified ahead of durable storage
+	local purchaseId = receiptInfo.PurchaseId
+	local key = "Player_" .. tostring(receiptInfo.PlayerId)
+	local now = os.time()
+	local myToken = session.sessionToken
 
-	-- 6. Immediate save commit
-	local saved = PlayerDataService.saveSession(player, false)
-	if saved then
+	local purchaseAlreadyGranted = false
+	local capExceededInDataStore = false
+	local conflictInStore = false
+
+	local ok, updatedRecord, err = executeWithRetry(function()
+		return currentAdapter.updateAsync(key, function(prevRecord: SessionRecord?)
+			if not prevRecord or not prevRecord.data then
+				return nil
+			end
+
+			-- Check session ownership
+			if prevRecord.sessionToken and prevRecord.sessionToken ~= "" and prevRecord.sessionToken ~= myToken then
+				if (now - prevRecord.leaseTimestamp) < LEASE_DURATION then
+					conflictInStore = true
+					return nil
+				end
+			end
+
+			local data = prevRecord.data
+			if not data.PurchaseHistory then
+				data.PurchaseHistory = {}
+			end
+
+			-- Duplicate receipt check in storage
+			if data.PurchaseHistory[purchaseId] then
+				purchaseAlreadyGranted = true
+				return prevRecord
+			end
+
+			-- Currency cap check in storage
+			local storeBalance = data.Currencies[targetCurrency] or 0
+			if storeBalance + grantAmount > cap then
+				capExceededInDataStore = true
+				return nil
+			end
+
+			data.Currencies[targetCurrency] = storeBalance + grantAmount
+			data.PurchaseHistory[purchaseId] = now
+
+			return {
+				sessionToken = myToken,
+				sessionLock = prevRecord.sessionLock,
+				leaseTimestamp = now,
+				data = data,
+			}
+		end)
+	end)
+
+	if conflictInStore then
+		session.isReadOnly = true
+		session.isConflicted = true
+		warn("[PlayerDataService] Session conflict detected during processReceipt for player", receiptInfo.PlayerId)
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	if purchaseAlreadyGranted then
+		-- Receipt already exists in DataStore; sync memory and acknowledge
+		session.data.PurchaseHistory[purchaseId] = session.data.PurchaseHistory[purchaseId] or now
 		return Enum.ProductPurchaseDecision.PurchaseGranted
-	else
-		-- Save failed; rollback memory changes to preserve idempotency on retry
-		session.data.PurchaseHistory[receiptInfo.PurchaseId] = nil
-		PlayerDataService.deductCurrency(player, targetCurrency, grantAmount)
+	end
+
+	if capExceededInDataStore then
+		warn("[PlayerDataService] Currency cap reached in DataStore during processReceipt for player", receiptInfo.PlayerId)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
+
+	if not ok or not updatedRecord then
+		-- Save failed or ambiguous network outcome:
+		-- In-memory balance was NEVER modified, so existing balance is 100% safe.
+		-- Return NotProcessedYet so Roblox can retry.
+		warn("[PlayerDataService] Failed to commit product purchase to DataStore for player", receiptInfo.PlayerId, "Error:", err)
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	-- Save succeeded! Sync in-memory session with the authoritative record from storage
+	if updatedRecord.data then
+		for k, v in pairs(updatedRecord.data) do
+			(session.data :: any)[k] = v
+		end
+	end
+	session.isDirty = false
+	session.lastSaveTime = now
+
+	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 
 -- Close session on player removing

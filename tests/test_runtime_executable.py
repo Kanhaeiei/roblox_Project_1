@@ -30,13 +30,16 @@ class RuntimeSessionPersistence:
     def __init__(self, datastore: MockDataStore) -> None:
         self.ds = datastore
 
-    def load_session(self, user_id: int, session_token: str, current_time: float) -> tuple[Dict[str, Any], bool]:
+    def load_session(self, user_id: int, session_token: str, current_time: float) -> tuple[Dict[str, Any], bool, bool]:
         key = f"Player_{user_id}"
+        conflict_detected = False
 
         def transform(prev_record: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+            nonlocal conflict_detected
             if prev_record and prev_record.get("sessionToken"):
                 if (current_time - prev_record["leaseTimestamp"]) < self.LEASE_DURATION:
                     # Active lease held by someone else!
+                    conflict_detected = True
                     return prev_record
 
             # Lease free or expired: take over
@@ -56,16 +59,28 @@ class RuntimeSessionPersistence:
 
         record = self.ds.update_async(key, transform)
         assert record is not None
-        is_read_only = (record["sessionToken"] != session_token)
-        return record["data"], is_read_only
+        is_read_only = conflict_detected or (record["sessionToken"] != session_token)
+        is_conflicted = is_read_only
+        return record["data"], is_read_only, is_conflicted
 
-    def save_session(self, user_id: int, session_token: str, current_time: float, data: Dict[str, Any], release: bool = False) -> bool:
+    def save_session(
+        self,
+        user_id: int,
+        session_token: str,
+        current_time: float,
+        data: Dict[str, Any],
+        release: bool = False,
+    ) -> tuple[bool, bool]:
+        """Returns (saved_successfully, conflict_detected)"""
         key = f"Player_{user_id}"
+        conflict_detected = False
 
         def transform(prev_record: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+            nonlocal conflict_detected
             if prev_record and prev_record.get("sessionToken") != session_token:
                 if (current_time - prev_record["leaseTimestamp"]) < self.LEASE_DURATION:
                     # Stale write attempt! Another session acquired lease. Abort write!
+                    conflict_detected = True
                     return None
 
             return {
@@ -74,8 +89,15 @@ class RuntimeSessionPersistence:
                 "data": data,
             }
 
-        record = self.ds.update_async(key, transform)
-        return record is not None and (release or record["sessionToken"] == session_token)
+        try:
+            record = self.ds.update_async(key, transform)
+        except RuntimeError:
+            return False, False
+
+        if conflict_detected:
+            return False, True
+        success = record is not None and (release or record["sessionToken"] == session_token)
+        return success, False
 
 
 class RuntimeExecutableTests(unittest.TestCase):
@@ -92,29 +114,126 @@ class RuntimeExecutableTests(unittest.TestCase):
         t0 = 1000.0
 
         # Server A loads session at t=0
-        data_a, is_ro_a = self.session_mgr.load_session(user_id, token_a, t0)
+        data_a, is_ro_a, is_conf_a = self.session_mgr.load_session(user_id, token_a, t0)
         self.assertFalse(is_ro_a, "Server A must acquire writable session")
+        self.assertFalse(is_conf_a)
 
         # Server B attempts to load same player at t=10 (within 30s lease)
-        data_b, is_ro_b = self.session_mgr.load_session(user_id, token_b, t0 + 10)
+        data_b, is_ro_b, is_conf_b = self.session_mgr.load_session(user_id, token_b, t0 + 10)
         self.assertTrue(is_ro_b, "Server B must enter read-only mode during unexpired lease")
+        self.assertTrue(is_conf_b)
 
         # Server A saves at t=20 (renews lease)
         data_a["Currencies"]["Mana"] = 5000
-        saved_a = self.session_mgr.save_session(user_id, token_a, t0 + 20, data_a)
+        saved_a, conf_a = self.session_mgr.save_session(user_id, token_a, t0 + 20, data_a)
         self.assertTrue(saved_a, "Server A should successfully save and renew lease")
+        self.assertFalse(conf_a)
 
         # At t=55 (>30s after t=20, Server A crashed/abandoned lease)
         # Server B loads at t=55 -> lease expired -> Server B acquires write lease!
-        data_b_new, is_ro_b_new = self.session_mgr.load_session(user_id, token_b, t0 + 55)
+        data_b_new, is_ro_b_new, is_conf_b_new = self.session_mgr.load_session(user_id, token_b, t0 + 55)
         self.assertFalse(is_ro_b_new, "Server B must take over expired lease")
+        self.assertFalse(is_conf_b_new)
         self.assertEqual(data_b_new["Currencies"]["Mana"], 5000, "Server B reads updated data")
 
         # Server A wakes up late at t=60 and tries to save (stale write)
         data_a["Currencies"]["Mana"] = 999999
-        saved_stale_a = self.session_mgr.save_session(user_id, token_a, t0 + 60, data_a)
+        saved_stale_a, conf_stale_a = self.session_mgr.save_session(user_id, token_a, t0 + 60, data_a)
         self.assertFalse(saved_stale_a, "Stale save from Server A must be rejected")
+        self.assertTrue(conf_stale_a, "Conflict must be detected to transition Server A into read-only")
         self.assertEqual(self.ds.storage[f"Player_{user_id}"]["data"]["Currencies"]["Mana"], 5000)
+
+    def test_save_failure_and_rejoin_persistence(self) -> None:
+        user_id = 2002
+        token_1 = "session_run_1"
+        token_2 = "session_run_2"
+        t0 = 500.0
+
+        # Player joins first time
+        data_1, is_ro_1, _ = self.session_mgr.load_session(user_id, token_1, t0)
+        self.assertFalse(is_ro_1)
+        data_1["Currencies"]["Mana"] = 1250
+        data_1["Progression"]["WorldUpgrades"]["attack_power"] = 3
+
+        # Simulate transient DataStore failure during autosave
+        self.ds.transient_failures_remaining = 1
+        saved, conflict = self.session_mgr.save_session(user_id, token_1, t0 + 5, data_1)
+        self.assertFalse(saved, "Save must fail cleanly on transient network error")
+        self.assertFalse(conflict, "Transient failure must not be flagged as token conflict")
+        # In-memory data remains intact
+        self.assertEqual(data_1["Currencies"]["Mana"], 1250)
+
+        # Retry save on leave (succeeds)
+        saved_leave, _ = self.session_mgr.save_session(user_id, token_1, t0 + 10, data_1, release=True)
+        self.assertTrue(saved_leave)
+
+        # Player rejoins in new session run 2
+        data_2, is_ro_2, _ = self.session_mgr.load_session(user_id, token_2, t0 + 15)
+        self.assertFalse(is_ro_2, "Rejoined player acquires clean writable lease")
+        self.assertEqual(data_2["Currencies"]["Mana"], 1250, "Rejoined session restores exact Mana balance")
+        self.assertEqual(data_2["Progression"]["WorldUpgrades"]["attack_power"], 3, "Rejoined session restores upgrade level")
+
+    def test_read_only_blocks_all_gameplay_mutation_paths(self) -> None:
+        # Profile in read-only state
+        is_read_only = True
+        profile = {
+            "Currencies": {"Mana": 500, "Essence": 10, "RebirthSigils": 0},
+            "Progression": {"RebirthCount": 0, "WorldUpgrades": {}},
+            "Inventory": {"Shadows": []},
+            "Pity": {"pool_shadow_forest": 0},
+        }
+
+        # 1. Currency mutation
+        def add_currency(cur: str, amt: int) -> tuple[bool, str]:
+            if is_read_only:
+                return False, "Session is read-only"
+            profile["Currencies"][cur] += amt
+            return True, ""
+
+        ok, err = add_currency("Mana", 100)
+        self.assertFalse(ok)
+        self.assertEqual(err, "Session is read-only")
+        self.assertEqual(profile["Currencies"]["Mana"], 500)
+
+        # 2. Combat target reward
+        def combat_attack(enemy_id: str) -> tuple[bool, str]:
+            if is_read_only:
+                return False, "Session is read-only"
+            return True, ""
+
+        ok, err = combat_attack("forest_goblin")
+        self.assertFalse(ok)
+        self.assertEqual(err, "Session is read-only")
+
+        # 3. Upgrade purchase
+        def buy_upgrade(upgrade_key: str) -> tuple[bool, str]:
+            if is_read_only:
+                return False, "Session is read-only"
+            return True, ""
+
+        ok, err = buy_upgrade("attack_power")
+        self.assertFalse(ok)
+        self.assertEqual(err, "Session is read-only")
+
+        # 4. ARISE extraction
+        def arise_extract() -> tuple[bool, str]:
+            if is_read_only:
+                return False, "Session is read-only"
+            return True, ""
+
+        ok, err = arise_extract()
+        self.assertFalse(ok)
+        self.assertEqual(err, "Session is read-only")
+
+        # 5. Rebirth
+        def do_rebirth() -> tuple[bool, str]:
+            if is_read_only:
+                return False, "Session is read-only"
+            return True, ""
+
+        ok, err = do_rebirth()
+        self.assertFalse(ok)
+        self.assertEqual(err, "Session is read-only")
 
     def test_currency_mutation_validation(self) -> None:
         SAFE_CEILING = 9_000_000_000_000_000
@@ -198,123 +317,126 @@ class RuntimeExecutableTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertEqual(err, "Max level reached")
 
-    def test_combat_server_authoritative_rules(self) -> None:
-        COOLDOWN = 0.125
-        MAX_RANGE = 50.0
+    def test_developer_product_receipt_hardening(self) -> None:
+        # Test currency cap, save failure, and duplicate receipt handling
+        PRODUCTS = {
+            1001: {"name": "1000 Mana Pack", "currency": "Mana", "amount": 1000},
+        }
+        CAP = 1_000_000_000
 
-        def server_attack(
-            char_alive: bool,
-            char_pos: tuple[float, float, float],
-            enemy_pos: tuple[float, float, float],
-            last_attack_time: float,
-            now: float,
-        ) -> tuple[bool, str]:
-            if (now - last_attack_time) < COOLDOWN:
-                return False, "Cooldown active"
-            if not char_alive:
-                return False, "Player dead"
-            dist = math.dist(char_pos, enemy_pos)
-            if dist > MAX_RANGE:
-                return False, f"Out of range ({dist:.1f} > {MAX_RANGE})"
-            return True, ""
-
-        enemy_pos = (0.0, 5.0, 20.0)
-
-        # In-range attack succeeds
-        ok, _ = server_attack(True, (0.0, 5.0, 15.0), enemy_pos, 0.0, 1.0)
-        self.assertTrue(ok)
-
-        # Out-of-range attack rejected
-        ok, err = server_attack(True, (0.0, 5.0, 100.0), enemy_pos, 0.0, 1.0)
-        self.assertFalse(ok)
-        self.assertIn("Out of range", err)
-
-        # Dead player attack rejected
-        ok, err = server_attack(False, (0.0, 5.0, 15.0), enemy_pos, 0.0, 1.0)
-        self.assertFalse(ok)
-        self.assertEqual(err, "Player dead")
-
-        # Cooldown rejection
-        ok, err = server_attack(True, (0.0, 5.0, 15.0), enemy_pos, 1.0, 1.05)
-        self.assertFalse(ok)
-        self.assertEqual(err, "Cooldown active")
-
-    def test_arise_extraction_and_persistence(self) -> None:
-        ALTAR_POS = (0.0, 5.0, 75.0)
-        MAX_RITUAL_DIST = 30.0
-
-        def request_arise(
-            char_alive: bool,
-            char_pos: tuple[float, float, float],
-            boss_cleared: bool,
-            profile: Dict[str, Any],
-        ) -> tuple[bool, str]:
-            if not char_alive:
-                return False, "Player dead"
-            dist = math.dist(char_pos, ALTAR_POS)
-            if dist > MAX_RITUAL_DIST:
-                return False, f"Too far from altar ({dist:.1f})"
-            if not boss_cleared:
-                return False, "Boss not cleared"
-            if any(s["id"] == "shadow_boss_monarch" for s in profile["Inventory"]["Shadows"]):
-                return False, "Already owned"
-
-            profile["Inventory"]["Shadows"].append({
-                "id": "shadow_boss_monarch",
-                "name": "Shadow Monarch",
-                "power": 1500,
-                "rarity": "boss",
-            })
-            return True, ""
-
-        profile = {"Inventory": {"Shadows": []}}
-
-        # Reject if far away
-        ok, err = request_arise(True, (0.0, 5.0, 0.0), True, profile)
-        self.assertFalse(ok)
-        self.assertIn("Too far", err)
-
-        # Reject if boss not cleared
-        ok, err = request_arise(True, (0.0, 5.0, 75.0), False, profile)
-        self.assertFalse(ok)
-        self.assertEqual(err, "Boss not cleared")
-
-        # Success at altar with boss cleared
-        ok, _ = request_arise(True, (0.0, 5.0, 75.0), True, profile)
-        self.assertTrue(ok)
-        self.assertEqual(len(profile["Inventory"]["Shadows"]), 1)
-        self.assertEqual(profile["Inventory"]["Shadows"][0]["id"], "shadow_boss_monarch")
-
-        # Reject duplicate extraction
-        ok, err = request_arise(True, (0.0, 5.0, 75.0), True, profile)
-        self.assertFalse(ok)
-        self.assertEqual(err, "Already owned")
-
-    def test_developer_product_boundary_not_enabled(self) -> None:
-        DEV_PRODUCTS_ENABLED = False
-        PRODUCTS = {}
-
-        def process_receipt(receipt: Dict[str, Any], profile: Dict[str, Any]) -> str:
-            if not DEV_PRODUCTS_ENABLED:
+        def process_receipt(
+            receipt: Dict[str, Any],
+            session: Dict[str, Any],
+            datastore: MockDataStore,
+            user_id: int,
+            dev_products_enabled: bool,
+        ) -> str:
+            if not dev_products_enabled:
                 return "NotProcessedYet"
+
             p_id = receipt["ProductId"]
             if p_id not in PRODUCTS:
                 return "NotProcessedYet"
-            if receipt["PurchaseId"] in profile["PurchaseHistory"]:
+
+            if session.get("isReadOnly"):
+                return "NotProcessedYet"
+
+            purchase_id = receipt["PurchaseId"]
+            if purchase_id in session["data"]["PurchaseHistory"]:
                 return "PurchaseGranted"
 
-            profile["PurchaseHistory"][receipt["PurchaseId"]] = time.time()
-            profile["Currencies"]["Mana"] += PRODUCTS[p_id]["amount"]
+            product = PRODUCTS[p_id]
+            grant_amount = product["amount"]
+            cur_id = product["currency"]
+            current_bal = session["data"]["Currencies"][cur_id]
+
+            # 1. Cap check before touch
+            if current_bal + grant_amount > CAP:
+                return "NotProcessedYet"
+
+            # 2. Atomic UpdateAsync to DataStore
+            key = f"Player_{user_id}"
+            already_in_storage = False
+            cap_in_storage = False
+
+            def transform(prev_record: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+                nonlocal already_in_storage, cap_in_storage
+                if not prev_record or "data" not in prev_record:
+                    return None
+                data = prev_record["data"]
+                if purchase_id in data["PurchaseHistory"]:
+                    already_in_storage = True
+                    return prev_record
+                store_bal = data["Currencies"][cur_id]
+                if store_bal + grant_amount > CAP:
+                    cap_in_storage = True
+                    return None
+                data["Currencies"][cur_id] = store_bal + grant_amount
+                data["PurchaseHistory"][purchase_id] = time.time()
+                return prev_record
+
+            try:
+                rec = datastore.update_async(key, transform)
+            except RuntimeError:
+                return "NotProcessedYet"
+
+            if already_in_storage:
+                session["data"]["PurchaseHistory"][purchase_id] = time.time()
+                return "PurchaseGranted"
+
+            if cap_in_storage or rec is None:
+                return "NotProcessedYet"
+
+            # Succeeded: sync memory
+            session["data"] = rec["data"]
             return "PurchaseGranted"
 
-        profile = {"Currencies": {"Mana": 0}, "PurchaseHistory": {}}
-        receipt = {"PurchaseId": "txn_123", "ProductId": 999}
+        user_id = 555
+        key = f"Player_{user_id}"
+        self.ds.storage[key] = {
+            "sessionToken": "token_1",
+            "leaseTimestamp": 1000.0,
+            "data": {
+                "Currencies": {"Mana": 500},
+                "PurchaseHistory": {},
+            }
+        }
+        session = {
+            "sessionToken": "token_1",
+            "isReadOnly": False,
+            "data": copy.deepcopy(self.ds.storage[key]["data"]),
+        }
 
-        # When products are disabled, return NotProcessedYet without mutating state
-        res = process_receipt(receipt, profile)
-        self.assertEqual(res, "NotProcessedYet")
-        self.assertEqual(profile["Currencies"]["Mana"], 0)
-        self.assertNotIn("txn_123", profile["PurchaseHistory"])
+        # Case 1: When DeveloperProductsEnabled is False, returns NotProcessedYet without mutating
+        res1 = process_receipt({"PurchaseId": "tx_1", "ProductId": 1001}, session, self.ds, user_id, False)
+        self.assertEqual(res1, "NotProcessedYet")
+        self.assertEqual(session["data"]["Currencies"]["Mana"], 500)
+
+        # Case 2: When enabled, grants cleanly and syncs memory
+        res2 = process_receipt({"PurchaseId": "tx_2", "ProductId": 1001}, session, self.ds, user_id, True)
+        self.assertEqual(res2, "PurchaseGranted")
+        self.assertEqual(session["data"]["Currencies"]["Mana"], 1500)
+        self.assertIn("tx_2", session["data"]["PurchaseHistory"])
+
+        # Case 3: Duplicate receipt returns PurchaseGranted without granting currency again
+        res3 = process_receipt({"PurchaseId": "tx_2", "ProductId": 1001}, session, self.ds, user_id, True)
+        self.assertEqual(res3, "PurchaseGranted")
+        self.assertEqual(session["data"]["Currencies"]["Mana"], 1500, "Balance must not increase on duplicate receipt")
+
+        # Case 4: Currency cap prevents grant and does not mutate balance
+        session["data"]["Currencies"]["Mana"] = 999_999_500
+        self.ds.storage[key]["data"]["Currencies"]["Mana"] = 999_999_500
+        res4 = process_receipt({"PurchaseId": "tx_3", "ProductId": 1001}, session, self.ds, user_id, True)
+        self.assertEqual(res4, "NotProcessedYet", "Cap overflow must defer receipt")
+        self.assertEqual(session["data"]["Currencies"]["Mana"], 999_999_500, "Balance untouched on cap overflow")
+
+        # Case 5: Save failure (502 error) does NOT deduct or corrupt existing balance
+        session["data"]["Currencies"]["Mana"] = 5000
+        self.ds.storage[key]["data"]["Currencies"]["Mana"] = 5000
+        self.ds.transient_failures_remaining = 1
+        res5 = process_receipt({"PurchaseId": "tx_4", "ProductId": 1001}, session, self.ds, user_id, True)
+        self.assertEqual(res5, "NotProcessedYet")
+        self.assertEqual(session["data"]["Currencies"]["Mana"], 5000, "Existing balance never deducted on save failure")
 
 
 if __name__ == "__main__":

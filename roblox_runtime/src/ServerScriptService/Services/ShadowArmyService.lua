@@ -96,6 +96,10 @@ function ShadowArmyService.handleAriseRequest(player: any): (boolean, string?, S
 		return false, "No active session", nil
 	end
 
+	if PlayerDataService.isReadOnly(player) then
+		return false, "Session is read-only", nil
+	end
+
 	-- 1. Server-authoritative character life and position check
 	local charPos: Vector3? = nil
 	local mock = mockCharacters[player]
@@ -155,6 +159,10 @@ function ShadowArmyService.handleSummonRequest(player: any, forcedRoll: number?)
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then
 		return false, "No active session", nil
+	end
+
+	if PlayerDataService.isReadOnly(player) then
+		return false, "Session is read-only", nil
 	end
 
 	local pool = Config.GachaPools.pool_shadow_forest
@@ -224,6 +232,10 @@ function ShadowArmyService.handleRebirthRequest(player: any): (boolean, string?,
 	local profile = PlayerDataService.getProfile(player)
 	if not profile then
 		return false, "No active session", nil
+	end
+
+	if PlayerDataService.isReadOnly(player) then
+		return false, "Session is read-only", nil
 	end
 
 	local currentRebirth = profile.Progression.RebirthCount or 0

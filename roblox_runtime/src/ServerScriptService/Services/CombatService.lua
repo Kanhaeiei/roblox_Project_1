@@ -126,6 +126,11 @@ function CombatService.handleTargetRequest(player: any, enemyId: string): (boole
 		state = playerCombatStates[player]
 	end
 
+	-- 0. Read-only session check
+	if PlayerDataService.isReadOnly(player) then
+		return false, "Session is read-only", nil
+	end
+
 	-- 1. Server-side attack cooldown check
 	local now = os.clock()
 	if (now - state.lastAttackTime) < Config.Combat.attackCooldown then

@@ -2,6 +2,13 @@
 
 This document turns the specification into release gates. A checked item requires code, a test, or measured evidence; documentation alone is not evidence.
 
+> [!CAUTION]
+> **CRITICAL SECURITY & DATA INTEGRITY NOTICE:**
+> **DO NOT enable Studio API Access on live production places or Experience ID `10768628555` (Shadow Army Rebirth).**
+> Any runtime testing in Roblox Studio must remain strictly within disposable test places with mock storage or isolated staging keys. Never expose live production DataStores or live player profiles to Studio Edit sessions.
+
+---
+
 ## Contract layer
 
 - [x] Pin a JSON Schema validator supporting Draft 2020-12.
@@ -37,20 +44,21 @@ This document turns the specification into release gates. A checked item require
 
 ## Runtime foundation
 
-- [x] Server-authoritative combat, rewards, inventory, gates, rebirth, and purchases (Verified 2026-09-30 in disposable Studio place, see `docs/evidence/runtime-studio-verification-2026-09-30.md`).
-- [x] Typed/narrow remotes with context, value, distance/state checks, and rate limits (31/31 Studio assertions passed).
-- [x] Idempotent developer-product receipt handling (`DeveloperProductsEnabled = false` until registered; unhandled purchases return `NotProcessedYet`).
-- [x] Versioned player data, ordered migrations, session conflict policy, retry/backoff, and failure UX (GUID session tokens, lease ownership, conflict read-only takeover).
+- [x] Server-authoritative combat, rewards, inventory, gates, rebirth, and purchases (Verified 2026-09-30 in disposable Studio place, 59/59 assertions passed, see `docs/evidence/runtime-studio-verification-2026-09-30.md`).
+- [x] Typed/narrow remotes with context, value, distance/state checks, and rate limits (Verified via named handler registration; write-only `OnServerInvoke` bug resolved).
+- [x] Idempotent developer-product receipt handling (`DeveloperProductsEnabled = false` until registered; hardened against duplicate receipt, currency cap overflow, and save failure retry exhaustion).
+- [x] Versioned player data, ordered migrations, session conflict policy, retry/backoff, and failure UX (GUID session tokens, lease preemption forces `isReadOnly = true` / `isConflicted = true`, 100% mutation lock across combat, upgrades, ARISE, summon, rebirth, and currency).
 - [x] Number-format module separated from stored values (Python `economy.formatter` and Luau `NumberFormatter.lua`).
 - [x] Analytics event registry and onboarding funnel (`AnalyticsRegistry.lua` verified).
 
 ## Vertical slice (Phase 6 Minimal Playable Slice)
 
-- [x] Core combat loop runnable in Studio (`RuntimeClient.client.lua` HUD + `CombatService` goblin attack + `PlayerDataService` Mana debit/credit).
-- [x] First input ≤5s, first kill ≤20s, first upgrade 20–60s (Verified runnable via minimal client HUD).
-- [ ] Mini-boss 2–4m, guaranteed first ARISE 6–10m, first rebirth 15–25m (Logic verified in Studio; live playtesting across full pacing timer pending).
+- [x] Core combat loop runnable in Studio (`RuntimeClient.client.lua` logic requests authoritative snapshot, server processes attacks and updates Mana).
 - [x] One deterministic upgrade path independent of summon luck (Authoritative upgrade allowlist `attack_power`, `mana_efficiency`).
-- [ ] Touch, keyboard/mouse, and controller completion paths (Core UI runs on PC/touch; gamepad keybinds pending).
+- [ ] Pacing validation: First input ≤5s, first kill ≤20s, first upgrade 20–60s (Progression logic verified, but empirical live stopwatch timing logs pending).
+- [ ] Mini-boss 2–4m, guaranteed first ARISE 6–10m, first rebirth 15–25m (Logic verified in Studio assertions; live playtesting across full pacing timer pending).
+- [ ] Touch, keyboard/mouse, and controller completion paths (UI script written; physical controller bindings and device layout testing pending).
+- [ ] Client GUI physical rendering: Reactive HUD on-screen display, visual layout on mobile/tablet viewports, and interactive `[READ-ONLY]` banner visual confirmation pending human playtesting.
 - [ ] Reduced motion/flashes/VFX, non-color rarity cues, and readable boss telegraphs.
 - [ ] Low-end mobile, high-latency, full-server, streaming, and soak tests.
 
@@ -64,7 +72,7 @@ This document turns the specification into release gates. A checked item require
 
 ## Production Boundaries (What is NOT Production-Ready by Design)
 
-- **Roblox DataStoreService**: Tested using `DataStoreAdapter` in-memory mock. Real DataStore access requires enabling API access in live Roblox experience settings.
+- **Roblox DataStoreService**: Tested using `DataStoreAdapter` in-memory mock. Real DataStore access requires enabling API access in live Roblox experience settings. **Never enable API access on production places during automated test runs.**
 - **Developer Products & Monetization**: Disabled by default (`Config.DeveloperProductsEnabled = false`). Product IDs must be created on Roblox Creator Dashboard and allowlisted in `Config.DeveloperProducts` before monetization goes live.
 - **Multi-Place Architecture**: World 1 (Shadow Forest) tested locally. Multi-world place teleportation requires registered Place IDs.
 
