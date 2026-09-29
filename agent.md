@@ -237,9 +237,10 @@ Release requires zero unresolved BLOCKER/CRITICAL issues. MAJOR issues require a
 
 ## 14. Current implementation roadmap
 
-1. Implement schema validation and deterministic validators before model orchestration.
-2. Create World 1 hand-authored golden fixtures to test the pipeline.
-3. Implement the runtime combat/economy slice with placeholder geometry.
-4. Add Studio Bridge dry-run and apply modes.
-5. Run player tests for time-to-first-kill and first ARISE.
-6. Tune from telemetry and device profiling; only then automate additional worlds.
+1. Implement schema validation and deterministic validators before model orchestration. **Complete.**
+2. Create World 1 hand-authored golden fixtures to test the pipeline. **Complete.**
+3. Add seeded dependency orchestration, immutable storage, manifest assembly, and Bridge dry-run. **Complete.**
+4. Connect the orchestrator to live model runners with bounded patch rounds and preserved provenance.
+5. Add Studio Bridge diff/apply/undo, then implement the runtime combat/economy slice with placeholder geometry.
+6. Run player tests for time-to-first-kill and first ARISE.
+7. Tune from telemetry and device profiling; only then automate additional worlds.

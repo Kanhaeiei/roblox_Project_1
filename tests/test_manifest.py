@@ -32,11 +32,12 @@ class ManifestAssemblerTests(unittest.TestCase):
         self.assertFalse(list(Draft202012Validator(schema).iter_errors(first)))
         self.assertEqual(first["namespace"], f"Workspace.Generated.{first['buildId']}")
 
-    def test_artifact_hashes_match_exact_source_bytes(self) -> None:
+    def test_artifact_hashes_match_canonical_source_content(self) -> None:
         manifest = self.assembler.assemble(WORLD)
         for path in WORLD.glob("*.json"):
             artifact = json.loads(path.read_text(encoding="utf-8"))
-            expected = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+            canonical = json.dumps(artifact, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            expected = "sha256:" + hashlib.sha256(canonical).hexdigest()
             self.assertEqual(manifest["artifactHashes"][artifact["artifactType"]], expected)
 
     def test_local_lights_target_the_actual_socket_instance(self) -> None:

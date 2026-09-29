@@ -16,7 +16,7 @@ The canonical hand-authored golden build for the first vertical slice. It contai
 08_vfx_audio.json
 ```
 
-All files share the same schema version, build ID, and seed. Cross-artifact IDs resolve, the spatial graph is connected, terrain remains scoped, collidable props avoid clearance volumes, gacha odds total 10,000 basis points, and economy checkpoints cover 5/15/30/60 minutes.
+All files share the same schema version, build ID, and seed. Every downstream artifact records the canonical hashes of its exact dependencies. Cross-artifact IDs resolve, the spatial graph is connected, terrain remains scoped, collidable props avoid clearance volumes, gacha odds total 10,000 basis points, and economy checkpoints cover 5/15/30/60 minutes.
 
 The QA fixture represents the expected verdict after validators pass; it is not proof that an unvalidated build is approved.
 

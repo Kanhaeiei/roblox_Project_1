@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
 
@@ -12,10 +13,20 @@ VALID_DIR = ROOT / "fixtures" / "world_01_shadow_forest"
 INVALID_DIR = ROOT / "fixtures" / "invalid"
 BUILD_ID = "world01-shadow-forest-golden"
 SEED = 48151623
-ZERO_HASH = "sha256:" + "0" * 64
+DEPENDENCIES = {
+    "gameConcept": (),
+    "director": ("gameConcept",),
+    "economy": ("gameConcept",),
+    "layout": ("director",),
+    "terrain": ("director", "layout"),
+    "props": ("layout", "terrain", "economy"),
+    "lighting": ("director", "props"),
+    "vfxAudio": ("director", "props", "economy"),
+    "qa": ("gameConcept", "director", "economy", "layout", "terrain", "props", "lighting", "vfxAudio"),
+}
 
 
-def envelope(artifact_type: str, stage_id: str, payload: dict, input_count: int = 1) -> dict:
+def envelope(artifact_type: str, stage_id: str, payload: dict) -> dict:
     return {
         "schemaVersion": "2.0.0",
         "artifactType": artifact_type,
@@ -23,7 +34,7 @@ def envelope(artifact_type: str, stage_id: str, payload: dict, input_count: int 
         "stageId": stage_id,
         "revision": 1,
         "seed": SEED,
-        "inputArtifactHashes": [] if input_count == 0 else [ZERO_HASH],
+        "inputArtifactHashes": [],
         "payload": payload,
         "assumptions": ["Golden fixture uses allowlisted placeholder registry keys, not release asset IDs."],
         "warnings": [],
@@ -89,7 +100,6 @@ def concept() -> dict:
             "monetizationBoundaries": ["no shop before first upgrade", "no paid first-clear extraction", "no fake urgency", "paid randomness disabled for MVP"],
             "prototypeRisks": ["auto-combat may feel passive", "squad crowding may hide boss tells", "three-order world jumps may outrun safe integers"],
         },
-        input_count=0,
     )
 
 
@@ -373,7 +383,7 @@ def qa() -> dict:
 
 
 def build_artifacts() -> dict[str, dict]:
-    return {
+    artifacts = {
         "00_game_concept.json": concept(),
         "01_director.json": director(),
         "02_layout.json": layout(),
@@ -384,6 +394,18 @@ def build_artifacts() -> dict[str, dict]:
         "07_economy.json": economy(),
         "08_vfx_audio.json": vfx_audio(),
     }
+    by_type = {artifact["artifactType"]: artifact for artifact in artifacts.values()}
+    hashes: dict[str, str] = {}
+    for artifact_type, dependencies in DEPENDENCIES.items():
+        artifact = by_type[artifact_type]
+        artifact["inputArtifactHashes"] = [hashes[dependency] for dependency in dependencies]
+        hashes[artifact_type] = canonical_hash(artifact)
+    return artifacts
+
+
+def canonical_hash(value: dict) -> str:
+    data = json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
 def invalid_artifacts(valid: dict[str, dict]) -> dict[str, dict]:

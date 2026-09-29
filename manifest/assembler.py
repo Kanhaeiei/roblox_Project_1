@@ -37,7 +37,7 @@ class ManifestAssembler:
             codes = ", ".join(issue.code for issue in validation_report.issues[:5])
             raise AssemblyError(f"Artifact validation failed before assembly: {codes}")
 
-        artifacts, raw_bytes = self._load_artifacts(directory)
+        artifacts = self._load_artifacts(directory)
         qa = artifacts["qa"]["payload"]
         if qa.get("status") != "APPROVED" or qa.get("readyForStudioBridge") is not True:
             raise AssemblyError("QA artifact must be APPROVED and readyForStudioBridge before assembly")
@@ -66,7 +66,7 @@ class ManifestAssembler:
             "seed": artifacts["director"]["seed"],
             "runtimeVersion": runtime_version,
             "namespace": namespace,
-            "artifactHashes": {artifact_type: _sha256(raw_bytes[artifact_type]) for artifact_type in ARTIFACT_ORDER},
+            "artifactHashes": {artifact_type: _canonical_sha256(artifacts[artifact_type]) for artifact_type in ARTIFACT_ORDER},
             "policies": {
                 "terrainReplacePolicy": artifacts["terrain"]["payload"]["replacePolicy"],
                 "allowArbitrarySource": False,
@@ -95,19 +95,16 @@ class ManifestAssembler:
             raise AssemblyError(f"Assembler produced an invalid manifest: {summary}")
         return manifest
 
-    def _load_artifacts(self, directory: Path) -> tuple[dict[str, dict[str, Any]], dict[str, bytes]]:
+    def _load_artifacts(self, directory: Path) -> dict[str, dict[str, Any]]:
         artifacts: dict[str, dict[str, Any]] = {}
-        raw: dict[str, bytes] = {}
         for path in sorted(directory.glob("*.json")):
-            data = path.read_bytes()
-            artifact = json.loads(data.decode("utf-8"))
+            artifact = json.loads(path.read_text(encoding="utf-8"))
             artifact_type = artifact["artifactType"]
             artifacts[artifact_type] = artifact
-            raw[artifact_type] = data
         missing = [name for name in ARTIFACT_ORDER if name not in artifacts]
         if missing:
             raise AssemblyError(f"Missing artifacts after validation: {', '.join(missing)}")
-        return artifacts, raw
+        return artifacts
 
     def _build_operations(self, artifacts: Mapping[str, Mapping[str, Any]], namespace: str) -> list[dict[str, Any]]:
         operations: list[dict[str, Any]] = []
@@ -200,5 +197,6 @@ class ManifestAssembler:
         return operations
 
 
-def _sha256(data: bytes) -> str:
+def _canonical_sha256(value: Mapping[str, Any]) -> str:
+    data = json.dumps(value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return "sha256:" + hashlib.sha256(data).hexdigest()

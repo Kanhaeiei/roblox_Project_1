@@ -8,7 +8,7 @@ This document turns the specification into release gates. A checked item require
 - [x] Add valid and invalid fixtures for every artifact kind.
 - [x] Enforce `artifactType` ↔ `stageId` ↔ `payload.kind` consistency.
 - [x] Add stable-ID uniqueness and cross-artifact reference validation.
-- [ ] Hash canonicalized inputs/outputs and reproduce a build from its seed.
+- [x] Hash canonicalized inputs/outputs, verify dependency lineage, and reproduce the Golden build from its seed.
 - [x] Reject NaN, Infinity, unknown production fields, and incompatible major versions.
 
 ## Deterministic validators

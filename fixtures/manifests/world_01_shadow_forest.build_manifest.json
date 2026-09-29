@@ -6,15 +6,15 @@
   "runtimeVersion": "0.1.0",
   "namespace": "Workspace.Generated.world01-shadow-forest-golden",
   "artifactHashes": {
-    "gameConcept": "sha256:0e14c93688ad3e5737d30598203222c01a3d273f55808f2a20869ba3df5621fb",
-    "director": "sha256:3bcd33b2b860ac7e72fd11c1d7304393c09894435712fb0008df274d01e8a07f",
-    "layout": "sha256:390c9b6cd1153fc54f73fe7dc2b9eb15f1230555f0bf9f94beee874c96431387",
-    "terrain": "sha256:3cfe1ffd871acf2d27689be8c9e2b3dbc38343386a8a57f187a3997f458a1a57",
-    "props": "sha256:81c1b9b3780a39649e5e6e617e68221448814fc9d6c087d7d88f65abfb1e5842",
-    "lighting": "sha256:201202fca8b8b7e088a41659cb09b7c0884c3981ddffb67cb01e856736e20cdf",
-    "economy": "sha256:797e31e226ef42d226fc68faede74b7e590478c4ac54df5c17758485de88db10",
-    "vfxAudio": "sha256:3f2a1778bf35e051d0a4514c5febbbf33150223285371c2d276051af92338a0f",
-    "qa": "sha256:e4762bf191c75cca82294d3ab10001927a99a5dfe311dc8eff716212609c0de2"
+    "gameConcept": "sha256:f6fba2e3a7d65c51a4c1c7b97e66860ae57cd8b1923ef17415063a9ec50b9f5c",
+    "director": "sha256:01a1a0bd6a063f44e427bb3bc76cdb21a87418fba2886e8453a921fb742e1725",
+    "layout": "sha256:c7e8b6421204b48e9a6abcfdb09dcbd09459118973e110a8741d03f4e7a4e82c",
+    "terrain": "sha256:441c7d68f699ad25a7e16d39e2684b4bef3b9e471e9e4ddcd9b49be5d80e8166",
+    "props": "sha256:6755562e5ca3650ce9e7fb15353b6534c7228047e413de0b71407f413933906f",
+    "lighting": "sha256:5517bc4e8c8438cc0eba39e8a35207ff211b754b68bc18bc0552d5281aa76445",
+    "economy": "sha256:55d7cebc15f14cb8df40b68e605ddd5e07d40e51b101e508cae8f23d3b236dd9",
+    "vfxAudio": "sha256:29b1944c66e3be587411874488295c607f69c438b6469dc18b2e86b5b25bebda",
+    "qa": "sha256:ee906fd951390f385dba938ce4935a84d2d4e8a9674a960a656ca213c13aaff8"
   },
   "policies": {
     "terrainReplacePolicy": "generated_namespace_only",
