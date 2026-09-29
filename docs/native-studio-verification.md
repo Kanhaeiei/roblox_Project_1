@@ -9,6 +9,16 @@ The native adapter is not production-ready until this checklist passes in a disp
 - Use a copy or empty test place, never the only copy of production work.
 - Keep Team Create disabled for the first mutation test.
 
+## Verified build and load (2026-09-29)
+
+- [x] Built `build/ShadowArmyMapBuilder.rbxmx` with Rojo 7.7.0.
+- [x] Installed the model as a local plugin and opened a generated disposable place.
+- [x] Roblox Studio `0.740.19.7400003` loaded and ran `user_ShadowArmyMapBuilder.rbxmx` without plugin `CreatorError` or `ScriptContext` errors.
+- [x] Removed an invalid toolbar icon discovered during the first load and verified a clean second load.
+- [ ] Complete the interactive Preview, Apply, Undo/Redo, failure, and visual checks below.
+
+Evidence: `docs/evidence/native-studio-load-2026-09-29.md`.
+
 ## Golden smoke test
 
 1. Open the plugin and paste `fixtures/manifests/world_01_shadow_forest.build_manifest.json`.

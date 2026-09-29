@@ -34,7 +34,7 @@ rojo build roblox_plugin/default.project.json --output build/ShadowArmyMapBuilde
 
 Install the generated model as a local Studio plugin, open a disposable test place, paste the validated manifest JSON into the dock widget, select **Preview**, inspect the summary, then select **Apply**. Use Studio Undo to revert the committed recording.
 
-The repository does not currently bundle Rojo or Roblox Studio automation, so compilation and an in-Studio smoke test remain manual release gates.
+The source has been compiled with Rojo 7.7.0 and verified to load cleanly in Roblox Studio `0.740.19.7400003`; see `docs/evidence/native-studio-load-2026-09-29.md`. The repository does not bundle Rojo or end-to-end Roblox Studio UI automation, so the interactive Preview/Apply/Undo verification remains a manual release gate.
 
 Official Roblox references:
 

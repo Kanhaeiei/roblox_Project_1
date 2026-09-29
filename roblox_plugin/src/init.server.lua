@@ -9,7 +9,7 @@ local toolbar = plugin:CreateToolbar("Shadow Army Builder")
 local toggleButton = toolbar:CreateButton(
 	"Shadow Army Builder",
 	"Preview and apply a validated Shadow Army build manifest",
-	"rbxasset://textures/DeveloperFramework/button_default.png"
+	""
 )
 
 local widgetInfo = DockWidgetPluginGuiInfo.new(
