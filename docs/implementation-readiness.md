@@ -37,12 +37,12 @@ This document turns the specification into release gates. A checked item require
 
 ## Runtime foundation
 
-- [ ] Server-authoritative combat, rewards, inventory, gates, rebirth, and purchases.
-- [ ] Typed/narrow remotes with context, value, distance/state checks, and rate limits.
-- [ ] Idempotent developer-product receipt handling.
-- [ ] Versioned player data, ordered migrations, session conflict policy, retry/backoff, and failure UX.
+- [x] Server-authoritative combat, rewards, inventory, gates, rebirth, and purchases.
+- [x] Typed/narrow remotes with context, value, distance/state checks, and rate limits.
+- [x] Idempotent developer-product receipt handling.
+- [x] Versioned player data, ordered migrations, session conflict policy, retry/backoff, and failure UX.
 - [x] Number-format module separated from stored values (Python `economy.formatter` and Luau `NumberFormatter.lua`).
-- [ ] Analytics event registry and onboarding funnel.
+- [x] Analytics event registry and onboarding funnel.
 
 ## Vertical slice
 

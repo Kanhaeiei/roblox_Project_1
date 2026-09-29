@@ -43,4 +43,5 @@ Thumbs.db
 fixtures/places/
 *.rbxl
 *.rbxlx
+*.rbxm
 
