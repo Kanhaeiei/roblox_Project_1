@@ -243,6 +243,7 @@ Release requires zero unresolved BLOCKER/CRITICAL issues. MAJOR issues require a
 4. Connect the orchestrator to replay and optional live model runners with bounded patch rounds and preserved provenance. **Complete.**
 5. Add provider evals and execute a credentialed World 1 generation run before accepting AI-authored artifacts as Golden candidates.
 6. Add Studio Bridge diff and transactional reference apply/undo. **Complete.**
-7. Implement the native Roblox Studio adapter with ChangeHistoryService, scoped snapshots, tags, and integration tests.
-8. Implement the runtime combat/economy slice with placeholder geometry and run player tests for time-to-first-kill and first ARISE.
-9. Tune from telemetry and device profiling; only then automate additional worlds.
+7. Implement the native Roblox Studio adapter source with ChangeHistoryService, scoped snapshots, and stable tags. **Complete.**
+8. Build/install the plugin and pass disposable-place Studio smoke, failure, undo/redo, and performance verification.
+9. Implement the runtime combat/economy slice with placeholder geometry and run player tests for time-to-first-kill and first ARISE.
+10. Tune from telemetry and device profiling; only then automate additional worlds.

@@ -143,6 +143,7 @@ class StudioBridgeDryRun:
         color_registry = self.asset_registry.get("colors", {})
         prefab_registry = self.asset_registry.get("prefabs", {})
         created_instances: set[str] = set()
+        created_targets: dict[str, str] = {}
 
         for index, operation in enumerate(manifest["operations"]):
             path = f"/operations/{index}"
@@ -164,6 +165,8 @@ class StudioBridgeDryRun:
             if action == "ensure_folder":
                 if payload.get("folderName") not in allowed_folders:
                     report.error("bridge.folder_not_allowed", f"{path}/payload/folderName", "Folder is not allowlisted")
+                elif target != f"{namespace}.{payload['folderName']}":
+                    report.error("bridge.target_payload_mismatch", f"{path}/target", "Folder target does not match folderName")
             elif action in {"terrain_fill", "terrain_subtract"}:
                 if payload.get("shape") not in allowed_shapes:
                     report.error("bridge.terrain_shape_not_allowed", f"{path}/payload/shape", "Terrain shape is not allowlisted")
@@ -177,10 +180,18 @@ class StudioBridgeDryRun:
                     report.error("bridge.folder_not_allowed", f"{path}/payload/parentCategory", "Parent category is not allowlisted")
                 self._require_registry_key(payload.get("materialToken"), material_registry, f"{path}/payload/materialToken", "material", report)
                 self._require_registry_key(payload.get("colorToken"), color_registry, f"{path}/payload/colorToken", "color", report)
-                created_instances.add(target.rsplit(".", 1)[-1])
+                instance_id = target.rsplit(".", 1)[-1]
+                if target != f"{namespace}.{payload.get('parentCategory')}.{instance_id}":
+                    report.error("bridge.target_payload_mismatch", f"{path}/target", "Primitive target does not match parentCategory")
+                created_instances.add(instance_id)
+                created_targets[instance_id] = target
             elif action == "create_prefab":
                 self._require_registry_key(payload.get("prefabKey"), prefab_registry, f"{path}/payload/prefabKey", "prefab", report)
-                created_instances.add(target.rsplit(".", 1)[-1])
+                instance_id = target.rsplit(".", 1)[-1]
+                if target != f"{namespace}.{payload.get('parentCategory')}.{instance_id}":
+                    report.error("bridge.target_payload_mismatch", f"{path}/target", "Prefab target does not match parentCategory")
+                created_instances.add(instance_id)
+                created_targets[instance_id] = target
             elif action == "create_local_light":
                 if payload.get("type") not in allowed_lights:
                     report.error("bridge.light_type_not_allowed", f"{path}/payload/type", "Light type is not allowlisted")
@@ -188,12 +199,16 @@ class StudioBridgeDryRun:
                 if socket_id not in created_instances:
                     report.error("bridge.unresolved_light_socket", f"{path}/payload/socketInstanceId", f"Socket {socket_id!r} was not created earlier")
                     report.unresolved_references += 1
+                elif target != created_targets[socket_id]:
+                    report.error("bridge.target_payload_mismatch", f"{path}/target", "Light target does not match its socket instance")
                 self._require_registry_key(payload.get("colorToken"), color_registry, f"{path}/payload/colorToken", "color", report)
             elif action == "bind_gameplay_marker":
                 instance_id = payload.get("instanceId")
                 if instance_id not in created_instances:
                     report.error("bridge.unresolved_marker_instance", f"{path}/payload/instanceId", f"Instance {instance_id!r} was not created earlier")
                     report.unresolved_references += 1
+                if target != f"{namespace}.Gameplay":
+                    report.error("bridge.target_payload_mismatch", f"{path}/target", "Gameplay marker bindings must target the Gameplay folder")
 
     def _require_registry_key(self, key: Any, registry: Mapping[str, Any], path: str, kind: str, report: DryRunReport) -> None:
         if key not in registry:

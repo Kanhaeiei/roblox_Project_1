@@ -1,0 +1,9 @@
+{
+  "name": "ShadowArmyMapBuilder",
+  "tree": {
+    "$className": "Folder",
+    "Plugin": {
+      "$path": "src"
+    }
+  }
+}

@@ -69,6 +69,7 @@ roblox-map-builder/
 ├── orchestrator/            # Dependency graph, lineage checks, immutable store
 ├── manifest/                # Validated artifact → deterministic manifest
 ├── studio_bridge/           # Non-mutating allowlist/budget/reference dry run
+├── roblox_plugin/           # Native Studio plugin source and adapter
 ├── registry/                # Bridge allowlist and logical asset registry
 ├── fixtures/                # Valid World 1 golden build and invalid fixtures
 ├── tests/                   # Contract and cross-artifact tests
@@ -133,4 +134,4 @@ python -m studio_bridge.control_cli diff fixtures/manifests/world_01_shadow_fore
 python -m unittest discover -s tests -v
 ```
 
-The checked-in World 1 artifacts and generated manifest are the golden contract for the E-Rank Shadow Forest vertical slice. Their dependency hashes are real canonical content hashes, so stale downstream outputs are rejected. The replay provider exercises the complete Agent Runner without network calls. A dry run may pass while `releaseReady` remains false: placeholder audio registry entries intentionally block a production release. See `agent_runner/README.md`, `orchestrator/README.md`, `validation/README.md`, `studio_bridge/README.md`, and `fixtures/README.md`.
+The checked-in World 1 artifacts and generated manifest are the golden contract for the E-Rank Shadow Forest vertical slice. Their dependency hashes are real canonical content hashes, so stale downstream outputs are rejected. The replay provider exercises the complete Agent Runner without network calls. A dry run may pass while `releaseReady` remains false: placeholder audio registry entries intentionally block a production release. The native plugin source must still pass `docs/native-studio-verification.md` inside Roblox Studio. See `agent_runner/README.md`, `orchestrator/README.md`, `validation/README.md`, `studio_bridge/README.md`, `roblox_plugin/README.md`, and `fixtures/README.md`.

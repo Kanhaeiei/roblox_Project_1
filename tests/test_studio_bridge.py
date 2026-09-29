@@ -42,6 +42,13 @@ class StudioBridgeDryRunTests(unittest.TestCase):
         report = self.bridge.run(manifest)
         self.assertIn("bridge.target_outside_namespace", {issue.code for issue in report.issues})
 
+    def test_target_must_match_payload_parent(self) -> None:
+        manifest = copy.deepcopy(self.manifest)
+        operation = next(item for item in manifest["operations"] if item["action"] == "create_primitive")
+        operation["target"] = f"{manifest['namespace']}.Props.{operation['target'].rsplit('.', 1)[-1]}"
+        report = self.bridge.run(manifest)
+        self.assertIn("bridge.target_payload_mismatch", {issue.code for issue in report.issues})
+
     def test_forbidden_source_payload_fails(self) -> None:
         manifest = copy.deepcopy(self.manifest)
         operation = next(item for item in manifest["operations"] if item["action"] == "create_primitive")
