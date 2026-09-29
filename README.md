@@ -2,7 +2,7 @@
 
 Version 2.0 is the source of truth for an anime minion battler built for Roblox. The repository defines the player experience, economy, generated-world contracts, validation gates, and the boundary between the build pipeline and the live game.
 
-This repository is a specification package. It does **not** yet contain a runnable game, orchestrator, Studio plugin, or production assets.
+This repository is a specification and build-contract package. It includes deterministic artifact validation, manifest assembly, and a non-mutating Studio Bridge dry run. It does **not** yet contain a runnable game, a live orchestrator, a mutating Studio plugin, or production assets.
 
 ## Product promise
 
@@ -62,8 +62,12 @@ roblox-map-builder/
 │   ├── implementation-readiness.md
 │   └── roblox-references.md
 ├── schemas/
-│   └── pipeline.schema.json
+│   ├── pipeline.schema.json
+│   └── build-manifest.schema.json
 ├── validation/              # Python schema + deterministic validator CLI
+├── manifest/                # Validated artifact → deterministic manifest
+├── studio_bridge/           # Non-mutating allowlist/budget/reference dry run
+├── registry/                # Bridge allowlist and logical asset registry
 ├── fixtures/                # Valid World 1 golden build and invalid fixtures
 ├── tests/                   # Contract and cross-artifact tests
 ├── tools/                   # Deterministic fixture generator
@@ -119,7 +123,9 @@ The first playable vertical slice is one 256×256-stud island with:
 python -m pip install -e .
 python tools/generate_world01_fixtures.py
 python -m validation fixtures/world_01_shadow_forest
+python -m manifest fixtures/world_01_shadow_forest --output build/world01.build_manifest.json
+python -m studio_bridge build/world01.build_manifest.json
 python -m unittest discover -s tests -v
 ```
 
-The checked-in World 1 fixture is the hand-authored golden contract for the E-Rank Shadow Forest vertical slice. See `validation/README.md` and `fixtures/README.md`.
+The checked-in World 1 artifacts and generated manifest are the golden contract for the E-Rank Shadow Forest vertical slice. A dry run may pass while `releaseReady` remains false: placeholder audio registry entries intentionally block a production release. See `validation/README.md`, `studio_bridge/README.md`, and `fixtures/README.md`.

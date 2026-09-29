@@ -1,0 +1,1098 @@
+{
+  "manifestVersion": "1.0.0",
+  "sourceSchemaVersion": "2.0.0",
+  "buildId": "world01-shadow-forest-golden",
+  "seed": 48151623,
+  "runtimeVersion": "0.1.0",
+  "namespace": "Workspace.Generated.world01-shadow-forest-golden",
+  "artifactHashes": {
+    "gameConcept": "sha256:0e14c93688ad3e5737d30598203222c01a3d273f55808f2a20869ba3df5621fb",
+    "director": "sha256:3bcd33b2b860ac7e72fd11c1d7304393c09894435712fb0008df274d01e8a07f",
+    "layout": "sha256:390c9b6cd1153fc54f73fe7dc2b9eb15f1230555f0bf9f94beee874c96431387",
+    "terrain": "sha256:3cfe1ffd871acf2d27689be8c9e2b3dbc38343386a8a57f187a3997f458a1a57",
+    "props": "sha256:81c1b9b3780a39649e5e6e617e68221448814fc9d6c087d7d88f65abfb1e5842",
+    "lighting": "sha256:201202fca8b8b7e088a41659cb09b7c0884c3981ddffb67cb01e856736e20cdf",
+    "economy": "sha256:797e31e226ef42d226fc68faede74b7e590478c4ac54df5c17758485de88db10",
+    "vfxAudio": "sha256:3f2a1778bf35e051d0a4514c5febbbf33150223285371c2d276051af92338a0f",
+    "qa": "sha256:e4762bf191c75cca82294d3ab10001927a99a5dfe311dc8eff716212609c0de2"
+  },
+  "policies": {
+    "terrainReplacePolicy": "generated_namespace_only",
+    "allowArbitrarySource": false,
+    "allowDirectAssetIds": false,
+    "generatedOnlyMutation": true
+  },
+  "budgets": {
+    "limits": {
+      "instances": 6000,
+      "baseParts": 3500,
+      "uniqueMeshIds": 150,
+      "uniqueTextureIds": 220,
+      "shadowCastingLights": 8,
+      "activeParticleEmittersNearPlayer": 24,
+      "particlesPerSecondNearPlayer": 350,
+      "transparentOverlapLayers": 4,
+      "clientFrameTargetFps": 30
+    },
+    "planned": {
+      "terrainOperations": 3,
+      "instances": 11,
+      "localLights": 2,
+      "markerBindings": 4,
+      "activeParticleEmittersNearPlayer": 12,
+      "particlesPerSecondNearPlayer": 180,
+      "transparentOverlapLayers": 3
+    }
+  },
+  "operations": [
+    {
+      "sequence": 1,
+      "operationId": "folder_structures",
+      "action": "ensure_folder",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures",
+      "payload": {
+        "folderName": "Structures"
+      }
+    },
+    {
+      "sequence": 2,
+      "operationId": "folder_props",
+      "action": "ensure_folder",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Props",
+      "payload": {
+        "folderName": "Props"
+      }
+    },
+    {
+      "sequence": 3,
+      "operationId": "folder_lightingprops",
+      "action": "ensure_folder",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.LightingProps",
+      "payload": {
+        "folderName": "LightingProps"
+      }
+    },
+    {
+      "sequence": 4,
+      "operationId": "folder_gameplay",
+      "action": "ensure_folder",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay",
+      "payload": {
+        "folderName": "Gameplay"
+      }
+    },
+    {
+      "sequence": 5,
+      "operationId": "terrain_terrain_base",
+      "action": "terrain_fill",
+      "target": "Workspace.Terrain",
+      "payload": {
+        "shape": "block",
+        "materialToken": "ground_dark",
+        "transform": {
+          "position": [
+            0,
+            -4,
+            0
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "size": [
+          256,
+          8,
+          256
+        ],
+        "scope": {
+          "min": [
+            -128,
+            -16,
+            -128
+          ],
+          "max": [
+            128,
+            80,
+            128
+          ]
+        },
+        "buildNamespace": "Workspace.Generated.world01-shadow-forest-golden"
+      }
+    },
+    {
+      "sequence": 6,
+      "operationId": "terrain_terrain_spawn_pad",
+      "action": "terrain_fill",
+      "target": "Workspace.Terrain",
+      "payload": {
+        "shape": "block",
+        "materialToken": "stone_moonlit",
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -96
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "size": [
+          100,
+          2,
+          48
+        ],
+        "scope": {
+          "min": [
+            -128,
+            -16,
+            -128
+          ],
+          "max": [
+            128,
+            80,
+            128
+          ]
+        },
+        "buildNamespace": "Workspace.Generated.world01-shadow-forest-golden"
+      }
+    },
+    {
+      "sequence": 7,
+      "operationId": "terrain_terrain_boss_pad",
+      "action": "terrain_fill",
+      "target": "Workspace.Terrain",
+      "payload": {
+        "shape": "cylinder",
+        "materialToken": "stone_corrupted",
+        "transform": {
+          "position": [
+            0,
+            -1,
+            78
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            90
+          ]
+        },
+        "size": [
+          100,
+          2,
+          100
+        ],
+        "scope": {
+          "min": [
+            -128,
+            -16,
+            -128
+          ],
+          "max": [
+            128,
+            80,
+            128
+          ]
+        },
+        "buildNamespace": "Workspace.Generated.world01-shadow-forest-golden"
+      }
+    },
+    {
+      "sequence": 8,
+      "operationId": "instance_floor_spawn",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.floor_spawn",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          100,
+          2,
+          48
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -96
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      }
+    },
+    {
+      "sequence": 9,
+      "operationId": "instance_floor_farm",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.floor_farm",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          120,
+          2,
+          92
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            -26
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "ground_dark",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      }
+    },
+    {
+      "sequence": 10,
+      "operationId": "instance_floor_miniboss",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.floor_miniboss",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          90,
+          2,
+          30
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            35
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      }
+    },
+    {
+      "sequence": 11,
+      "operationId": "instance_floor_boss",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.floor_boss",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          100,
+          2,
+          55
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            77.5
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "shadow_black",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      }
+    },
+    {
+      "sequence": 12,
+      "operationId": "instance_floor_gate",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.floor_gate",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          50,
+          2,
+          23
+        ],
+        "transform": {
+          "position": [
+            0,
+            -1,
+            116.5
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "generated",
+          "foundation"
+        ]
+      }
+    },
+    {
+      "sequence": 13,
+      "operationId": "instance_upgrade_altar",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay.upgrade_altar",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          8,
+          4,
+          8
+        ],
+        "transform": {
+          "position": [
+            -20,
+            2,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "mana_cyan",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "interaction",
+          "upgrade"
+        ]
+      }
+    },
+    {
+      "sequence": 14,
+      "operationId": "instance_summon_altar",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay.summon_altar",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          8,
+          4,
+          8
+        ],
+        "transform": {
+          "position": [
+            20,
+            2,
+            -92
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "arise_violet",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "interaction",
+          "summon"
+        ]
+      }
+    },
+    {
+      "sequence": 15,
+      "operationId": "instance_miniboss_totem",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.miniboss_totem",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          4,
+          10,
+          4
+        ],
+        "transform": {
+          "position": [
+            18,
+            5,
+            38
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_corrupted",
+        "colorToken": "danger_crimson",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "landmark"
+        ]
+      }
+    },
+    {
+      "sequence": 16,
+      "operationId": "instance_boss_ritual_socket",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay.boss_ritual_socket",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Gameplay",
+        "size": [
+          24,
+          0.2,
+          24
+        ],
+        "transform": {
+          "position": [
+            0,
+            0.2,
+            82
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "neon",
+        "colorToken": "arise_violet",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "vfx_socket",
+          "boss"
+        ]
+      }
+    },
+    {
+      "sequence": 17,
+      "operationId": "instance_rebirth_portal_socket",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.LightingProps.rebirth_portal_socket",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "LightingProps",
+        "size": [
+          18,
+          16,
+          1
+        ],
+        "transform": {
+          "position": [
+            0,
+            8,
+            118
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "neon",
+        "colorToken": "mana_cyan",
+        "anchored": true,
+        "canCollide": false,
+        "canTouch": false,
+        "canQuery": false,
+        "castShadow": false,
+        "tags": [
+          "vfx_socket",
+          "portal"
+        ]
+      }
+    },
+    {
+      "sequence": 18,
+      "operationId": "instance_spawn_beacon",
+      "action": "create_primitive",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Structures.spawn_beacon",
+      "payload": {
+        "className": "Part",
+        "parentCategory": "Structures",
+        "size": [
+          4,
+          12,
+          4
+        ],
+        "transform": {
+          "position": [
+            0,
+            6,
+            -116
+          ],
+          "orientationDegrees": [
+            0,
+            0,
+            0
+          ]
+        },
+        "materialToken": "stone_moonlit",
+        "colorToken": "moon_blue",
+        "anchored": true,
+        "canCollide": true,
+        "canTouch": false,
+        "canQuery": true,
+        "castShadow": true,
+        "tags": [
+          "landmark"
+        ]
+      }
+    },
+    {
+      "sequence": 19,
+      "operationId": "lighting_global_profiles",
+      "action": "configure_lighting",
+      "target": "Lighting",
+      "payload": {
+        "profiles": [
+          {
+            "tier": "low",
+            "clockTime": 21.0,
+            "brightness": 1.5,
+            "ambient": [
+              45,
+              50,
+              70
+            ],
+            "outdoorAmbient": [
+              55,
+              60,
+              85
+            ],
+            "atmosphereDensity": 0.18,
+            "bloomIntensity": 0.2,
+            "contrast": 0.05,
+            "saturation": 0.0
+          },
+          {
+            "tier": "medium",
+            "clockTime": 21.0,
+            "brightness": 1.8,
+            "ambient": [
+              35,
+              40,
+              65
+            ],
+            "outdoorAmbient": [
+              48,
+              55,
+              82
+            ],
+            "atmosphereDensity": 0.24,
+            "bloomIntensity": 0.45,
+            "contrast": 0.1,
+            "saturation": 0.05
+          },
+          {
+            "tier": "high",
+            "clockTime": 21.0,
+            "brightness": 2.0,
+            "ambient": [
+              30,
+              35,
+              60
+            ],
+            "outdoorAmbient": [
+              45,
+              52,
+              80
+            ],
+            "atmosphereDensity": 0.28,
+            "bloomIntensity": 0.65,
+            "contrast": 0.12,
+            "saturation": 0.08
+          }
+        ],
+        "readabilityTargets": [
+          "enemy silhouettes remain readable",
+          "boss danger red remains distinct",
+          "critical path visible on low tier"
+        ],
+        "fallbackRules": [
+          "disable decorative shadows first",
+          "reduce bloom and local-light range on low tier"
+        ]
+      }
+    },
+    {
+      "sequence": 20,
+      "operationId": "light_light_boss_ritual",
+      "action": "create_local_light",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay.boss_ritual_socket",
+      "payload": {
+        "socketInstanceId": "boss_ritual_socket",
+        "type": "point",
+        "colorToken": "arise_violet",
+        "range": 28,
+        "brightness": 1.5,
+        "castsShadows": false
+      }
+    },
+    {
+      "sequence": 21,
+      "operationId": "light_light_rebirth_portal",
+      "action": "create_local_light",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.LightingProps.rebirth_portal_socket",
+      "payload": {
+        "socketInstanceId": "rebirth_portal_socket",
+        "type": "surface",
+        "colorToken": "mana_cyan",
+        "range": 32,
+        "brightness": 2.0,
+        "castsShadows": false
+      }
+    },
+    {
+      "sequence": 22,
+      "operationId": "marker_marker_boss",
+      "action": "bind_gameplay_marker",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay",
+      "payload": {
+        "markerId": "marker_boss",
+        "instanceId": "boss_ritual_socket"
+      }
+    },
+    {
+      "sequence": 23,
+      "operationId": "marker_marker_rebirth_gate",
+      "action": "bind_gameplay_marker",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay",
+      "payload": {
+        "markerId": "marker_rebirth_gate",
+        "instanceId": "rebirth_portal_socket"
+      }
+    },
+    {
+      "sequence": 24,
+      "operationId": "marker_marker_summon_altar",
+      "action": "bind_gameplay_marker",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay",
+      "payload": {
+        "markerId": "marker_summon_altar",
+        "instanceId": "summon_altar"
+      }
+    },
+    {
+      "sequence": 25,
+      "operationId": "marker_marker_upgrade_altar",
+      "action": "bind_gameplay_marker",
+      "target": "Workspace.Generated.world01-shadow-forest-golden.Gameplay",
+      "payload": {
+        "markerId": "marker_upgrade_altar",
+        "instanceId": "upgrade_altar"
+      }
+    }
+  ],
+  "runtimeConfig": {
+    "economy": {
+      "kind": "economy",
+      "status": "READY",
+      "safeIntegerCeiling": 9000000000000000,
+      "currencies": [
+        {
+          "id": "mana",
+          "scope": "world",
+          "sources": [
+            "enemy defeats",
+            "mana crystals"
+          ],
+          "sinks": [
+            "guaranteed upgrades",
+            "earned summon"
+          ],
+          "cap": 1000000000,
+          "targetTimeToAffordSeconds": 45
+        },
+        {
+          "id": "essence",
+          "scope": "account",
+          "sources": [
+            "duplicates",
+            "achievements"
+          ],
+          "sinks": [
+            "chosen fusion",
+            "evolution"
+          ],
+          "cap": 10000000,
+          "targetTimeToAffordSeconds": 300
+        },
+        {
+          "id": "rebirth_sigils",
+          "scope": "account",
+          "sources": [
+            "rebirth",
+            "mastery milestones"
+          ],
+          "sinks": [
+            "permanent mastery"
+          ],
+          "cap": 1000000,
+          "targetTimeToAffordSeconds": 1200
+        },
+        {
+          "id": "soul_shards",
+          "scope": "premium",
+          "sources": [
+            "boss challenges",
+            "optional purchase"
+          ],
+          "sinks": [
+            "cosmetics",
+            "non-random quantified boosts"
+          ],
+          "cap": 1000000,
+          "targetTimeToAffordSeconds": 1800
+        }
+      ],
+      "formulas": [
+        {
+          "id": "world_base_power",
+          "expression": "100 * 1000^(worldIndex-1)",
+          "inputs": [
+            "world_index"
+          ],
+          "outputUnit": "power"
+        },
+        {
+          "id": "rebirth_cost",
+          "expression": "round(25000 * 6^r * 1.18^(max(0,r-5)^1.35))",
+          "inputs": [
+            "rebirth_count"
+          ],
+          "outputUnit": "mana"
+        },
+        {
+          "id": "rebirth_power",
+          "expression": "1 + 0.50*r + 0.05*r^2",
+          "inputs": [
+            "rebirth_count"
+          ],
+          "outputUnit": "multiplier"
+        }
+      ],
+      "worldBands": [
+        {
+          "worldId": "world_01_shadow_forest",
+          "basePower": 100,
+          "targetDurationSeconds": 1200
+        }
+      ],
+      "rebirth": {
+        "costFormulaId": "rebirth_cost",
+        "powerFormulaId": "rebirth_power",
+        "baseSquadSlots": 3,
+        "earnedSlotsPerMilestone": 2,
+        "firstTargetSeconds": 1200
+      },
+      "gachaPools": [
+        {
+          "id": "pool_shadow_forest",
+          "currencyId": "mana",
+          "cost": 100,
+          "paidRandomEligible": false,
+          "outcomes": [
+            {
+              "definitionId": "shadow_imp",
+              "rateBasisPoints": 6500
+            },
+            {
+              "definitionId": "shadow_hound",
+              "rateBasisPoints": 2500
+            },
+            {
+              "definitionId": "shadow_mage",
+              "rateBasisPoints": 900
+            },
+            {
+              "definitionId": "shadow_footman",
+              "rateBasisPoints": 100
+            }
+          ],
+          "pityCounterKey": "pity_shadow_forest_legendary",
+          "pityThreshold": 50,
+          "duplicateProtection": "Duplicates award essence and choice-progress toward a selected soldier."
+        }
+      ],
+      "resetManifest": {
+        "reset": [
+          "Currencies.Mana",
+          "Progression.WorldUpgrades"
+        ],
+        "keep": [
+          "Inventory.Shadows",
+          "Entitlements",
+          "Cosmetics",
+          "Pity"
+        ],
+        "transform": [
+          "Progression.RebirthCount += 1",
+          "Currencies.RebirthSigils += reward"
+        ]
+      },
+      "playerData": {
+        "schemaVersion": 1,
+        "defaults": {
+          "Currencies": {
+            "Mana": 0,
+            "Essence": 0,
+            "RebirthSigils": 0,
+            "SoulShards": 0
+          },
+          "Progression": {
+            "RebirthCount": 0,
+            "WorldId": "world_01_shadow_forest"
+          },
+          "Inventory": {
+            "Shadows": []
+          },
+          "Pity": {},
+          "Entitlements": {},
+          "Settings": {
+            "ReducedMotion": false
+          }
+        },
+        "migrations": [],
+        "sessionPolicy": "Server-owned session lease with conflict-safe update and graceful read-only fallback."
+      },
+      "simulations": [
+        {
+          "elapsedSeconds": 300,
+          "expectedPower": 2500,
+          "expectedCurrency": 3000,
+          "unlockedMilestones": [
+            "mini_boss_ready"
+          ]
+        },
+        {
+          "elapsedSeconds": 900,
+          "expectedPower": 50000,
+          "expectedCurrency": 18000,
+          "unlockedMilestones": [
+            "first_arise",
+            "rebirth_goal_visible"
+          ]
+        },
+        {
+          "elapsedSeconds": 1800,
+          "expectedPower": 250000,
+          "expectedCurrency": 80000,
+          "unlockedMilestones": [
+            "first_rebirth"
+          ]
+        },
+        {
+          "elapsedSeconds": 3600,
+          "expectedPower": 1200000,
+          "expectedCurrency": 400000,
+          "unlockedMilestones": [
+            "world_one_mastery"
+          ]
+        }
+      ],
+      "invariants": [
+        "currencies are non-negative integers",
+        "first boss clear guarantees ARISE",
+        "all gacha outcomes total 10000 basis points",
+        "owned boss shadows survive rebirth"
+      ],
+      "remoteRules": [
+        {
+          "intent": "request_target",
+          "ratePerSecond": 8,
+          "validations": [
+            "type",
+            "enemy ownership",
+            "range",
+            "player alive"
+          ]
+        },
+        {
+          "intent": "request_upgrade",
+          "ratePerSecond": 2,
+          "validations": [
+            "type",
+            "server price",
+            "balance",
+            "upgrade state"
+          ]
+        },
+        {
+          "intent": "request_arise",
+          "ratePerSecond": 1,
+          "validations": [
+            "boss clear",
+            "first-clear state",
+            "distance",
+            "not already owned"
+          ]
+        }
+      ],
+      "analyticsEvents": [
+        "ftue_spawned",
+        "ftue_first_kill",
+        "ftue_first_upgrade",
+        "ftue_miniboss_clear",
+        "ftue_first_arise",
+        "ftue_first_rebirth"
+      ]
+    },
+    "soundscapes": [
+      {
+        "zoneId": "zone_spawn_hub",
+        "musicRegistryKey": "music_shadow_hub",
+        "ambientRegistryKeys": [
+          "ambience_forest_night"
+        ],
+        "crossfadeSeconds": 2.0
+      },
+      {
+        "zoneId": "zone_boss_arena",
+        "musicRegistryKey": "music_boss_blood_knight",
+        "ambientRegistryKeys": [
+          "ambience_shadow_rumble"
+        ],
+        "crossfadeSeconds": 1.5
+      }
+    ],
+    "effectRecipes": [
+      {
+        "id": "fx_first_arise",
+        "eventName": "boss_arise_approved",
+        "priority": "reward",
+        "socketIds": [
+          "boss_ritual_socket",
+          "marker_boss"
+        ],
+        "layers": [
+          "particle",
+          "beam",
+          "highlight",
+          "sound",
+          "camera",
+          "ui",
+          "animation"
+        ],
+        "qualityTiers": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "reducedMotionVariant": "No camera shake; shorter mist and static ownership card.",
+        "skippable": true
+      },
+      {
+        "id": "fx_rebirth_gate",
+        "eventName": "rebirth_gate_ready",
+        "priority": "reward",
+        "socketIds": [
+          "rebirth_portal_socket"
+        ],
+        "layers": [
+          "particle",
+          "light",
+          "sound",
+          "ui"
+        ],
+        "qualityTiers": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "reducedMotionVariant": "Static portal glow with no swirl.",
+        "skippable": false
+      }
+    ],
+    "accessibilityProfiles": [
+      "default",
+      "reduced_motion",
+      "reduced_flashes",
+      "low_vfx"
+    ]
+  },
+  "rollback": {
+    "strategy": "restore_snapshots_and_remove_generated_namespace",
+    "previousCompatibleBuildId": null,
+    "terrainSnapshotRequired": true,
+    "lightingSnapshotRequired": true
+  }
+}

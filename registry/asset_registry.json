@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "materials": {
+    "ground_dark": { "robloxMaterial": "Ground", "status": "approved" },
+    "stone_moonlit": { "robloxMaterial": "Slate", "status": "approved" },
+    "stone_corrupted": { "robloxMaterial": "Basalt", "status": "approved" },
+    "neon": { "robloxMaterial": "Neon", "status": "approved" }
+  },
+  "colors": {
+    "shadow_black": { "rgb": [18, 18, 28], "status": "approved" },
+    "moon_blue": { "rgb": [90, 120, 180], "status": "approved" },
+    "mana_cyan": { "rgb": [40, 220, 255], "status": "approved" },
+    "arise_violet": { "rgb": [135, 45, 255], "status": "approved" },
+    "danger_crimson": { "rgb": [230, 40, 65], "status": "approved" }
+  },
+  "prefabs": {},
+  "audio": {
+    "music_shadow_hub": { "status": "placeholder", "assetId": null },
+    "music_boss_blood_knight": { "status": "placeholder", "assetId": null },
+    "ambience_forest_night": { "status": "placeholder", "assetId": null },
+    "ambience_shadow_rumble": { "status": "placeholder", "assetId": null }
+  }
+}

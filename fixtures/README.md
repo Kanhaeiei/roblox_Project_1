@@ -26,10 +26,15 @@ This fixture intentionally uses registry keys and placeholder content definition
 
 Contains one intentionally broken fixture for every artifact type. The failures cover schema and deterministic rules such as stage mismatch, missing bounds, narrow critical paths, out-of-scope terrain, duplicate IDs, invalid quality tiers, QA status inconsistency, incorrect probability totals, and invalid effect priority.
 
+## `manifests/`
+
+Contains the deterministic Studio build manifest assembled from the valid World 1 artifacts. It records exact source hashes, ordered allowlisted operations, planned budgets, runtime configuration, and rollback requirements. It is safe for dry-run validation but intentionally not release-ready while registry audio remains placeholder content.
+
 ## Regeneration
 
 ```powershell
 python tools/generate_world01_fixtures.py
+python tools/generate_world01_manifest.py
 ```
 
 Generation is deterministic and safe to run repeatedly.

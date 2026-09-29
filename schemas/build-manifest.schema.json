@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shadow-army.local/schemas/build-manifest.schema.json",
+  "title": "Shadow Army Studio Build Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifestVersion",
+    "sourceSchemaVersion",
+    "buildId",
+    "seed",
+    "runtimeVersion",
+    "namespace",
+    "artifactHashes",
+    "policies",
+    "budgets",
+    "operations",
+    "runtimeConfig",
+    "rollback"
+  ],
+  "properties": {
+    "manifestVersion": { "const": "1.0.0" },
+    "sourceSchemaVersion": { "const": "2.0.0" },
+    "buildId": { "$ref": "#/$defs/id" },
+    "seed": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "runtimeVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "namespace": { "type": "string", "pattern": "^Workspace\\.Generated\\.[a-z0-9][a-z0-9._-]{1,63}$" },
+    "artifactHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gameConcept", "director", "layout", "terrain", "props", "lighting", "economy", "vfxAudio", "qa"],
+      "properties": {
+        "gameConcept": { "$ref": "#/$defs/hash" },
+        "director": { "$ref": "#/$defs/hash" },
+        "layout": { "$ref": "#/$defs/hash" },
+        "terrain": { "$ref": "#/$defs/hash" },
+        "props": { "$ref": "#/$defs/hash" },
+        "lighting": { "$ref": "#/$defs/hash" },
+        "economy": { "$ref": "#/$defs/hash" },
+        "vfxAudio": { "$ref": "#/$defs/hash" },
+        "qa": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terrainReplacePolicy", "allowArbitrarySource", "allowDirectAssetIds", "generatedOnlyMutation"],
+      "properties": {
+        "terrainReplacePolicy": { "enum": ["generated_namespace_only", "empty_region_only"] },
+        "allowArbitrarySource": { "const": false },
+        "allowDirectAssetIds": { "const": false },
+        "generatedOnlyMutation": { "const": true }
+      }
+    },
+    "budgets": { "$ref": "#/$defs/budgets" },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/operation" }
+    },
+    "runtimeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["economy", "soundscapes", "effectRecipes", "accessibilityProfiles"],
+      "properties": {
+        "economy": { "type": "object" },
+        "soundscapes": { "type": "array", "items": { "type": "object" } },
+        "effectRecipes": { "type": "array", "items": { "type": "object" } },
+        "accessibilityProfiles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "previousCompatibleBuildId", "terrainSnapshotRequired", "lightingSnapshotRequired"],
+      "properties": {
+        "strategy": { "const": "restore_snapshots_and_remove_generated_namespace" },
+        "previousCompatibleBuildId": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "terrainSnapshotRequired": { "const": true },
+        "lightingSnapshotRequired": { "const": true }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$" },
+    "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limits", "planned"],
+      "properties": {
+        "limits": { "type": "object" },
+        "planned": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["terrainOperations", "instances", "localLights", "markerBindings", "activeParticleEmittersNearPlayer", "particlesPerSecondNearPlayer", "transparentOverlapLayers"],
+          "properties": {
+            "terrainOperations": { "type": "integer", "minimum": 0 },
+            "instances": { "type": "integer", "minimum": 0 },
+            "localLights": { "type": "integer", "minimum": 0 },
+            "markerBindings": { "type": "integer", "minimum": 0 },
+            "activeParticleEmittersNearPlayer": { "type": "integer", "minimum": 0 },
+            "particlesPerSecondNearPlayer": { "type": "integer", "minimum": 0 },
+            "transparentOverlapLayers": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "operationId", "action", "target", "payload"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "operationId": { "$ref": "#/$defs/id" },
+        "action": {
+          "enum": [
+            "ensure_folder",
+            "terrain_fill",
+            "terrain_subtract",
+            "create_primitive",
+            "create_prefab",
+            "configure_lighting",
+            "create_local_light",
+            "bind_gameplay_marker"
+          ]
+        },
+        "target": { "type": "string", "minLength": 1 },
+        "payload": { "type": "object" }
+      }
+    }
+  }
+}

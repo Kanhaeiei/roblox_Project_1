@@ -17,8 +17,8 @@ This document turns the specification into release gates. A checked item require
 - [x] Graph reachability and reciprocal connections.
 - [x] Clearance volumes versus collidable primitive instances.
 - [ ] Terrain/structure support and scoped mutation.
-- [ ] Registry allowlists for prefabs, assets, classes, properties, and events.
-- [ ] Multi-dimensional performance ledger.
+- [x] Registry allowlists for prefabs/assets, bridge actions, folders, classes, and terrain shapes.
+- [x] Manifest-level multi-dimensional planned-versus-limit performance ledger.
 - [x] Gacha basis-point totals for authored pools.
 - [ ] Economy simulation, safe-integer, cap, affordability, and reset invariants.
 
@@ -27,8 +27,8 @@ This document turns the specification into release gates. A checked item require
 - [ ] Dry-run diff before mutation.
 - [ ] Apply only under `Workspace.Generated/<buildId>`.
 - [ ] Undo/history integration and rollback report.
-- [ ] No arbitrary Luau source, asset ID, path, class, or property from a model response.
-- [ ] Full support matrix for every declared terrain operation; unsupported operations block.
+- [x] Dry-run rejection of arbitrary Luau source/direct asset IDs, out-of-namespace paths, and non-allowlisted actions/classes.
+- [x] Full dry-run support matrix for every currently declared terrain operation; unsupported shapes/actions block.
 - [ ] Stream-safe tags/references rather than unconditional descendant assumptions.
 
 ## Runtime foundation

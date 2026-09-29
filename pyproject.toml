@@ -11,6 +11,8 @@ dependencies = ["jsonschema>=4.20,<5"]
 
 [project.scripts]
 shadow-validate = "validation.cli:main"
+shadow-assemble = "manifest.cli:main"
+shadow-bridge-dry-run = "studio_bridge.cli:main"
 
 [tool.setuptools]
-packages = ["validation"]
+packages = ["validation", "manifest", "studio_bridge"]

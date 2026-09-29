@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "actions": [
+    "ensure_folder",
+    "terrain_fill",
+    "terrain_subtract",
+    "create_primitive",
+    "create_prefab",
+    "configure_lighting",
+    "create_local_light",
+    "bind_gameplay_marker"
+  ],
+  "classes": {
+    "primitive": ["Part", "WedgePart", "TrussPart"],
+    "light": ["point", "spot", "surface"]
+  },
+  "folders": ["Structures", "Props", "LightingProps", "Gameplay"],
+  "terrainShapes": ["block", "ball", "cylinder", "wedge"],
+  "forbiddenPayloadKeys": ["source", "scriptSource", "code", "luau", "assetId", "meshId", "soundId"],
+  "allowedNamespacePrefix": "Workspace.Generated."
+}
