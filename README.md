@@ -129,6 +129,7 @@ python -m agent_runner "Create World 1" --build-id world01-local-001 --seed 4815
 python -m orchestrator fixtures/world_01_shadow_forest --store build/artifact-store --manifest-output build/world01.orchestrated.build_manifest.json
 python -m manifest fixtures/world_01_shadow_forest --output build/world01.build_manifest.json
 python -m studio_bridge build/world01.build_manifest.json
+python -m studio_bridge.control_cli diff fixtures/manifests/world_01_shadow_forest.build_manifest.json --state build/bridge-state.json --output build/bridge-plan.json
 python -m unittest discover -s tests -v
 ```
 

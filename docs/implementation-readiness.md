@@ -25,7 +25,9 @@ This document turns the specification into release gates. A checked item require
 
 ## Studio Bridge
 
-- [ ] Dry-run diff before mutation.
+- [x] Deterministic dry-run diff before reference-state mutation.
+- [x] Transactional reference apply with warning gate, receipt, automatic rollback, and divergence-safe undo.
+- [ ] Native Roblox Studio adapter implementing the verified control-plane contract.
 - [ ] Apply only under `Workspace.Generated/<buildId>`.
 - [ ] Undo/history integration and rollback report.
 - [x] Dry-run rejection of arbitrary Luau source/direct asset IDs, out-of-namespace paths, and non-allowlisted actions/classes.

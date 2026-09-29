@@ -16,6 +16,7 @@ ai = ["openai>=1.66,<3"]
 shadow-validate = "validation.cli:main"
 shadow-assemble = "manifest.cli:main"
 shadow-bridge-dry-run = "studio_bridge.cli:main"
+shadow-bridge-control = "studio_bridge.control_cli:main"
 shadow-orchestrate = "orchestrator.cli:main"
 shadow-agent-run = "agent_runner.cli:main"
 
